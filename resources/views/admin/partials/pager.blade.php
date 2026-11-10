@@ -1,0 +1,3 @@
+@if ($p->hasPages())
+<div class="row-flex mt-3" style="justify-content:space-between"><span class="muted" style="font-size:13px">{{ $p->firstItem() }}–{{ $p->lastItem() }} of {{ $p->total() }}</span><span class="row-flex">@if ($p->onFirstPage())<span class="btn-d sm" disabled><i class="far fa-angle-left"></i> Previous</span>@else<a class="btn-d sm" href="{{ $p->previousPageUrl() }}"><i class="far fa-angle-left"></i> Previous</a>@endif<span class="muted" style="font-size:13px">Page {{ $p->currentPage() }} / {{ $p->lastPage() }}</span>@if ($p->hasMorePages())<a class="btn-d sm" href="{{ $p->nextPageUrl() }}">Next <i class="far fa-angle-right"></i></a>@else<span class="btn-d sm" disabled>Next <i class="far fa-angle-right"></i></span>@endif</span></div>
+@endif

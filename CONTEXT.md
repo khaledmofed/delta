@@ -150,13 +150,20 @@ Last updated: 10-Nov-2026.
    - Payment return + `orders:poll-policies` (every 5 min) call `policyStatus()`. The return URL is never trusted; only `paymentStatus = F` fails a payment.
    - Quote requests and orders are tied to the browser session (`App\Support\JourneyAccess`) until customer accounts exist.
    - `SITE_DEMO` (on by default only when `APP_ENV=local`): demo panel, prefilled wizard, "Use sample files" (1×1 placeholder sent to the insurer). Never enable in production.
-4. **Still open in the journey:**
+4. ✅ **Admin panel** (done 10-Nov-2026, `/admin`, covered by `tests/Feature/AdminPanelTest`):
+   - Same look as `admin.html` (`layouts/admin`, `delta-app.css`). Detail drawers are rendered by the server (`/admin/orders/{ref}` = list + open drawer).
+   - Staff login (`users` table), 5 failed attempts per email+IP then a 60 s lock; logins, failures, logouts are in `audit_logs`.
+   - Create staff: `php artisan admin:user you@deltains-brokers.com --role=super_admin` (asks for the password, or `--generate` prints one once).
+   - Roles and permissions: `config/admin.php`, same roles as the prototype's `ROLE_MATRIX`.
+   - Sections: Dashboard (real counts only), Providers (on/off switch + connection test), Quote Requests (each insurer's result, customer message and technical error), Orders (state machine + history + payments), Leads (status and owner), API Logs (filter by insurer, operation, result, request ID prefix).
+   - The provider switch is `insurers.enabled`; `InsurerManager::forProduct()` skips switched-off insurers. An insurer not enabled in `.env` cannot be switched on from the panel.
+   - Not built yet (prototype screens): products/capabilities, quotes list, policies, customers, documents review, payments, commissions, ERP, users & roles editor, audit log viewer, notifications, reports.
+5. **Still open in the journey:**
    - Payment end to end on DIN UAT (blocked by 8112; then a test card is needed).
    - Policy PDF download, then email (policy documents are already stored on the private disk when DIN returns them).
    - Vehicle lookup by chassis (insurer EDATA): the "Find vehicle" button only guesses in demo mode.
    - AWNIC needs `insurer_codes.meta.din` mappings and make/model codes before it can quote.
-5. **Admin panel:** orders, quotes, `api_logs` viewer, insurers on/off, leads (owner, source, next action).
-6. **Lead forms** for the non-digital products.
+6. **Lead forms** for the non-digital products (the website forms still save to the browser only; the admin Leads list is ready for them).
 7. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.
 
 ## 6. Hosting decisions
