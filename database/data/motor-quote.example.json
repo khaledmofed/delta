@@ -1,0 +1,39 @@
+{
+  "name_en": "Test Customer",
+  "name_ar": null,
+  "email": "test@example.com",
+  "mobile": "+971 50 123 4567",
+  "dob": "1986-04-12",
+  "gender": "M",
+  "nationality": "102",
+  "emirate": "02",
+  "emirates_id": "784-1986-1234567-1",
+  "emirates_id_expiry": "2028-05-06",
+  "license_no": "1234567",
+  "license_from": "2015-05-23",
+  "license_to": "2031-05-23",
+  "ncd_years": 2,
+  "chassis": "TESTCHASSIS000001",
+  "tcf_number": "10000000",
+  "plate_source": "0001",
+  "plate_code": "E",
+  "plate_number": "12345",
+  "registration_date": "2025-11-10",
+  "traffic_tran_type": "103",
+  "is_new": false,
+  "is_gcc": true,
+  "cover_type": "comprehensive",
+  "repair": null,
+  "finance_bank": null,
+  "policy_start": "2026-11-20",
+  "make": "Nissan",
+  "model": "Altima",
+  "year": 2015,
+  "documents": [
+    {"type": "eid_front", "file_name": "eid_front.png", "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="},
+    {"type": "eid_back", "file_name": "eid_back.png", "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="}
+  ],
+  "extra": {
+    "awnic": {"makeCode": "", "modelCode": "", "specDesc": "", "sumInsured": 0}
+  }
+}
