@@ -39,71 +39,7 @@
                 <div><i class="fal fa-headset"></i>Real advisors</div>
               </div>
             </div>
-@include('partials.site.hero-quote')
-          </div>
-          <div class="insurers">
-            <span
-              >Offers from leading UAE insurers<br /><small
-                style="color: #b23b3b"
-                >demo — to be confirmed</small
-              ></span
-            >
-            <div class="list">
-              <span class="ins"
-                ><span class="ins-logo ins-logo--sm" title="Sukoon Insurance"
-                  ><img
-                    src="{{ asset('images/insurers/sukoon.png') }}"
-                    alt="Sukoon Insurance"
-                    data-pid="sukoon"
-                    onerror="
-                      DELTA.util && DELTA.util.logoFallback(this)
-                    " /></span
-                ><span class="nm">Sukoon Insurance</span></span
-              ><span class="ins"
-                ><span class="ins-logo ins-logo--sm" title="Orient Insurance"
-                  ><img
-                    src="{{ asset('images/insurers/orient.png') }}"
-                    alt="Orient Insurance"
-                    data-pid="orient"
-                    onerror="
-                      DELTA.util && DELTA.util.logoFallback(this)
-                    " /></span
-                ><span class="nm">Orient Insurance</span></span
-              ><span class="ins"
-                ><span class="ins-logo ins-logo--sm" title="ADNIC"
-                  ><img
-                    src="{{ asset('images/insurers/adnic.png') }}"
-                    alt="ADNIC"
-                    data-pid="adnic"
-                    onerror="
-                      DELTA.util && DELTA.util.logoFallback(this)
-                    " /></span
-                ><span class="nm">ADNIC</span></span
-              ><span class="ins"
-                ><span class="ins-logo ins-logo--sm" title="GIG Gulf"
-                  ><img
-                    src="{{ asset('images/insurers/gig.png') }}"
-                    alt="GIG Gulf"
-                    data-pid="gig"
-                    onerror="
-                      DELTA.util && DELTA.util.logoFallback(this)
-                    " /></span
-                ><span class="nm">GIG Gulf</span></span
-              ><span class="ins"
-                ><span
-                  class="ins-logo ins-logo--sm"
-                  title="Al Buhaira National Insurance"
-                  ><img
-                    src="{{ asset('images/insurers/albuhaira.png') }}"
-                    alt="Al Buhaira National Insurance"
-                    data-pid="albuhaira"
-                    onerror="
-                      DELTA.util && DELTA.util.logoFallback(this)
-                    " /></span
-                ><span class="nm">Al Buhaira National</span></span
-              >
-            </div>
-          </div>
+@include('partials.site.hero-visual')
         </div>
       </section>
 

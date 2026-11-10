@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\LeadReceived;
 use App\Mail\NewLeadAlert;
-use App\Models\InsurerCode;
+use App\Models\Insurer;
 use App\Models\Lead;
 use App\Models\Quote;
 use App\Models\QuoteRequest;
@@ -25,25 +25,37 @@ class SiteImprovementsTest extends TestCase
         $this->setUpMotorJourney();
     }
 
-    public function test_home_hero_has_the_quick_motor_quote_form(): void
+    /** Hero as in the prototype (photo, 35+ card, floating card, navy quote bar, logo strip) with real insurer data. */
+    public function test_home_hero_matches_the_prototype_with_real_insurers(): void
     {
-        InsurerCode::create(['insurer' => 'din', 'type' => 'plateSource', 'code' => '0001', 'label' => 'Dubai']);
-
         $this->get('/')->assertOk()
-            ->assertSee('Get your motor insurance quote')
-            ->assertSee('data-quick-quote method="get" action="'.route('motor.quote').'"', false)
-            ->assertSee('name="make"', false)->assertSee('name="model"', false)->assertSee('name="year"', false)
-            ->assertSee('<option value="0001">Dubai</option><option value="3000">plateSource 3000</option>', false)
-            ->assertSee('Continue to quotes')
+            ->assertSee('images/photo/hero-advisors.jpg', false)
+            ->assertSee('<span class="yr">35+</span>', false)
             ->assertSee('Get motor quotes')->assertSee('Speak to an advisor')
-            ->assertDontSee('hero-advisors.jpg')         // the old hero photo card with sample prices
-            ->assertDontSee('class="quotebar', false);
+            // floating card: connected insurers, no prices
+            ->assertSeeInOrder(['<div class="float-card a">', 'Compare motor quotes', 'title="Dubai Insurance"', 'Dubai Insurance<span class="p">Live quotes</span>', 'title="Al Wathba Insurance"', 'Al Wathba<span class="p">Live quotes</span>'], false)
+            ->assertDontSee('Motor quotes · 2024 Toyota Land Cruiser')   // old floating card title with sample prices
+            // navy quote bar -> /motor-quote, with the number of enabled insurers
+            ->assertSee('<div class="quotebar rv" id="quote">', false)
+            ->assertSee('data-quick-quote method="get" action="'.route('motor.quote').'"', false)
+            ->assertSee('Quotes from 2 insurers in minutes')
+            ->assertSee('Get my quotes')
+            // logo strip: real insurers only
+            ->assertSeeInOrder(['<div class="insurers">', 'Offers from leading UAE insurers', '<span class="nm">Dubai Insurance</span>', '<span class="nm">Al Wathba Insurance</span>'], false)
+            ->assertDontSee('demo — to be confirmed')
+            ->assertDontSee('<span class="nm">Sukoon Insurance</span>', false)
+            ->assertDontSee('Get your motor insurance quote');   // the hero form card is gone
     }
 
-    public function test_hero_hides_the_emirate_field_when_codes_are_missing(): void
+    public function test_quote_bar_counts_only_enabled_insurers(): void
     {
-        InsurerCode::where('type', 'plateSource')->delete();
-        $this->get('/')->assertOk()->assertSee('Continue to quotes')->assertDontSee('name="plateSource"', false);
+        Insurer::create(['code' => 'awnic', 'name' => 'Al Wathba Insurance', 'enabled' => false]);   // switched off in the admin panel
+        $this->get('/')->assertOk()
+            ->assertSee('Quotes from 1 insurer in minutes')
+            ->assertSee('<span class="nm">Al Wathba Insurance</span>', false);   // still a partner in the strip
+
+        Insurer::create(['code' => 'din', 'name' => 'Dubai Insurance', 'enabled' => false]);
+        $this->get('/')->assertOk()->assertSee('Advisor-assisted quotes')->assertDontSee('Quotes from 0');
     }
 
     public function test_results_offer_a_plan_details_link_and_the_page_shows_every_cover(): void

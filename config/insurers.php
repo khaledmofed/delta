@@ -14,6 +14,7 @@ return [
 
         'din' => [
             'name' => 'Dubai Insurance',
+            'short' => 'Dubai Insurance',   // home page hero / logo strip
             'adapter' => App\Insurers\Din\DinAdapter::class,
             'enabled' => env('DIN_ENABLED', false),
             'products' => ['motor'],
@@ -29,6 +30,7 @@ return [
 
         'awnic' => [
             'name' => 'Al Wathba Insurance',
+            'short' => 'Al Wathba',
             'adapter' => App\Insurers\Awnic\AwnicAdapter::class,
             'enabled' => env('AWNIC_ENABLED', false),
             'products' => ['motor'],
