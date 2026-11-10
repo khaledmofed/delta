@@ -5,6 +5,9 @@ We have received your request for {{ $lead->productName() }}. A Delta advisor wi
 
 Your reference: {{ $lead->reference }}
 Mobile: +{{ $lead->mobile }}
+@foreach ($lead->supportDetails() as $k => $v)
+{{ $k }}: {{ $v }}
+@endforeach
 @if (! empty($d['emirate']))
 Emirate: {{ $d['emirate'] }}
 @endif

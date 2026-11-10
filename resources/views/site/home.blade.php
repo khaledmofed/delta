@@ -24,8 +24,8 @@
                 travels, boats and pets.
               </p>
               <div class="ctas rv">
-                <a class="btn-x btn-navy" href="{{ route('services') }}"
-                  ><span>Explore our services</span
+                <a class="btn-x btn-navy" href="{{ route('motor.quote') }}"
+                  ><span>Get motor quotes</span
                   ><span class="ar"><i class="far fa-arrow-right"></i></span></a
                 ><a class="btn-x btn-line no-ar" href="{{ route('contact') }}"
                   ><span>Speak to an advisor</span></a
@@ -39,80 +39,7 @@
                 <div><i class="fal fa-headset"></i>Real advisors</div>
               </div>
             </div>
-            <div class="hero-visual rv">
-              <div class="photo">
-                <img
-                  src="{{ asset('images/photo/hero-advisors.jpg') }}"
-                  alt="Delta advisor helping a client"
-                />
-              </div>
-              <div class="float-card b">
-                <span class="yr">35+</span>
-                <div>
-                  <b style="display: block; font-size: 14px">Years in the UAE</b
-                  ><small>Serving clients from Sharjah</small>
-                </div>
-              </div>
-              <div class="float-card a">
-                <small style="margin-bottom: 6px"
-                  >Motor quotes · 2024 Toyota Land Cruiser</small
-                >
-                <div class="row-mini">
-                  <span class="ins-logo ins-logo--sm" title="Orient Insurance"
-                    ><img
-                      src="{{ asset('images/insurers/orient.png') }}"
-                      alt="Orient Insurance"
-                      data-pid="orient"
-                      onerror="
-                        DELTA.util && DELTA.util.logoFallback(this)
-                      " /></span
-                  >Orient<span class="p">AED 6,812</span>
-                </div>
-                <div class="row-mini">
-                  <span class="ins-logo ins-logo--sm" title="Sukoon Insurance"
-                    ><img
-                      src="{{ asset('images/insurers/sukoon.png') }}"
-                      alt="Sukoon Insurance"
-                      data-pid="sukoon"
-                      onerror="
-                        DELTA.util && DELTA.util.logoFallback(this)
-                      " /></span
-                  >Sukoon<span class="p">AED 7,164</span>
-                </div>
-                <div class="row-mini">
-                  <span class="ins-logo ins-logo--sm" title="ADNIC"
-                    ><img
-                      src="{{ asset('images/insurers/adnic.png') }}"
-                      alt="ADNIC"
-                      data-pid="adnic"
-                      onerror="
-                        DELTA.util && DELTA.util.logoFallback(this)
-                      " /></span
-                  >ADNIC<span class="p">AED 7,590</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="quotebar rv" id="quote">
-            <div class="t">
-              <span
-                class="d-badge d-badge--online"
-                style="background: rgba(0, 255, 151, 0.12); color: #00ff97"
-                >Online now</span
-              ><b>Compare motor insurance</b
-              ><small>Quotes from 3 insurers in minutes</small>
-            </div>
-            <form data-quick-quote>
-              <select name="make" aria-label="Make"></select>
-              <select name="model" aria-label="Model">
-                <option value="">Model</option>
-              </select>
-              <select name="year" aria-label="Year"></select>
-              <button class="btn-x btn-mint" type="submit">
-                <span>Get my quotes</span
-                ><span class="ar"><i class="far fa-arrow-right"></i></span>
-              </button>
-            </form>
+@include('partials.site.hero-quote')
           </div>
           <div class="insurers">
             <span

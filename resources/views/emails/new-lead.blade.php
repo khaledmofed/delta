@@ -9,9 +9,10 @@
       'Name' => $lead->name,
       'Mobile' => '+'.$lead->mobile,
       'Email' => $lead->email,
+  ] + $lead->supportDetails() + [
       'Preferred contact' => $d['contact_pref'] ?? '—',
       'Emirate' => $d['emirate'] ?? '—',
-      'Source' => ($d['source'] ?? '') === 'contact' ? 'Contact page' : 'Product page'.(! empty($d['page']) ? ' ('.$d['page'].')' : ''),
+      'Source' => match ($d['source'] ?? '') { 'contact' => 'Contact page', 'claims' => 'Claims & Support page', default => 'Product page'.(! empty($d['page']) ? ' ('.$d['page'].')' : '') },
       'Received' => $lead->created_at?->timezone(config('app.timezone'))->format('d M Y, H:i'),
   ] as $k => $v)
   <tr><td style="padding:7px 0;border-bottom:1px solid #e3e9ef;color:#7a8a99;width:150px;vertical-align:top">{{ $k }}</td><td style="padding:7px 0;border-bottom:1px solid #e3e9ef;font-weight:bold">{{ $v }}</td></tr>

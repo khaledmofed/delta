@@ -5,9 +5,12 @@ Reference: {{ $lead->reference }}
 Name: {{ $lead->name }}
 Mobile: +{{ $lead->mobile }}
 Email: {{ $lead->email }}
+@foreach ($lead->supportDetails() as $k => $v)
+{{ $k }}: {{ $v }}
+@endforeach
 Preferred contact: {{ $d['contact_pref'] ?? '—' }}
 Emirate: {{ $d['emirate'] ?? '—' }}
-Source: {{ ($d['source'] ?? '') === 'contact' ? 'Contact page' : 'Product page'.(! empty($d['page']) ? ' ('.$d['page'].')' : '') }}
+Source: {{ match ($d['source'] ?? '') { 'contact' => 'Contact page', 'claims' => 'Claims & Support page', default => 'Product page'.(! empty($d['page']) ? ' ('.$d['page'].')' : '') } }}
 Received: {{ $lead->created_at?->timezone(config('app.timezone'))->format('d M Y, H:i') }}
 @if (! empty($d['message']))
 

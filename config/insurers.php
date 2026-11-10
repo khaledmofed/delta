@@ -21,6 +21,8 @@ return [
             'username' => env('DIN_USERNAME'),
             'password' => env('DIN_PASSWORD'),
             'timeout' => (int) env('DIN_TIMEOUT', 30),
+            // Insurer claims hotline shown on /claims. Leave empty until confirmed with the insurer.
+            'claims_phone' => env('DIN_CLAIMS_PHONE'),
             // JWT lifetime is not documented by DIN; refresh conservatively.
             'token_ttl_minutes' => 20,
         ],
@@ -35,6 +37,7 @@ return [
             'api_key' => env('AWNIC_API_KEY'),
             'customer_code' => env('AWNIC_CUSTOMER_CODE'),
             'timeout' => (int) env('AWNIC_TIMEOUT', 30),
+            'claims_phone' => env('AWNIC_CLAIMS_PHONE'),
             'product_code' => '9018',
             'quote_process_by' => 'Delta Insurance Services',
         ],

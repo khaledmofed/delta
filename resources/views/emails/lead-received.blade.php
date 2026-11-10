@@ -8,6 +8,7 @@
   <tr><td style="padding:14px 18px;font-size:14px;line-height:1.7">
     <b style="color:#256383">Your reference:</b> {{ $lead->reference }}<br />
     <b style="color:#256383">Mobile:</b> +{{ $lead->mobile }}<br />
+    @foreach ($lead->supportDetails() as $k => $v)<b style="color:#256383">{{ $k }}:</b> {{ $v }}<br />@endforeach
     @if (! empty($d['emirate']))<b style="color:#256383">Emirate:</b> {{ $d['emirate'] }}<br />@endif
     @if (! empty($d['message']))<b style="color:#256383">Your message:</b><br /><span style="white-space:pre-line">{{ $d['message'] }}</span>@endif
   </td></tr>

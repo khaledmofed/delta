@@ -58,6 +58,22 @@ class QuoteController extends Controller
         return view('site.motor.compare', ['qr' => $qr, 'quotes' => $quotes]);
     }
 
+    /** Plan details: every cover, excess and the key terms of one offer, before the customer selects it. */
+    public function plan(QuoteRequest $quoteRequest, Quote $quote, MotorOrders $orders)
+    {
+        $qr = JourneyAccess::quote($quoteRequest);
+        abort_unless($quote->quote_request_id === $qr->id, 404);
+        $addons = $orders->matchAddons($quote, $qr->input['addons'] ?? []);
+        [$premium, $vat, $total] = $orders->totals($quote, $addons);
+
+        return view('site.motor.plan', [
+            'qr' => $qr,
+            'quote' => $quote,
+            'addons' => $addons,
+            'withAddons' => compact('premium', 'vat', 'total'),
+        ]);
+    }
+
     public function select(Quote $quote, MotorOrders $orders)
     {
         $qr = JourneyAccess::quote($quote->quoteRequest);

@@ -13,6 +13,7 @@
             <div class="mega">@foreach (config('site.services') as $key => $s)<a href="{{ route('products.'.$key) }}" class="{{ $s['online'] ? 'feat' : '' }}"><span class="ic"><i class="fal {{ $s['icon'] }}"></i></span><span><b>{{ $s['name'] }}@if ($s['online'])<span class="d-badge d-badge--online" style="padding:4px 8px;font-size:11px">Buy online</span>@endif</b><small>{{ $s['desc'] }}</small></span></a>@endforeach<div class="foot"><span>Not sure what you need?</span><a class="link-x" href="{{ route('contact') }}">Speak to an advisor <i class="far fa-arrow-right"></i></a></div></div>
           </li>
           <li class="{{ $active === 'motorquote' ? 'active' : '' }}"><a href="{{ url(config('site.links.motor_quote')) }}">Motor Quote</a></li>
+          <li class="{{ $active === 'claims' ? 'active' : '' }}"><a href="{{ route('claims') }}">Claims &amp; Support</a></li>
           <li class="{{ $active === 'about' ? 'active' : '' }}"><a href="{{ route('about') }}">About Us</a></li>
           <li class="{{ $active === 'contact' ? 'active' : '' }}"><a href="{{ route('contact') }}">Contact</a></li>
         </ul>
@@ -32,6 +33,7 @@
 
         <div class="grp">Company</div>
         <a class="it" href="{{ url(config('site.links.motor_quote')) }}"><i class="fal fa-scale-balanced"></i>Compare motor quotes</a>
+        <a class="it" href="{{ route('claims') }}"><i class="fal fa-life-ring"></i>Claims &amp; Support</a>
         <a class="it" href="{{ route('about') }}"><i class="fal fa-building"></i>About Us</a>
         <a class="it" href="{{ route('contact') }}"><i class="fal fa-envelope"></i>Contact</a>
         <a class="it" href="{{ url(config('site.links.login')) }}"><i class="fal fa-circle-user"></i>My Account</a>

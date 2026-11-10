@@ -70,14 +70,16 @@ final class MotorPresenter
             'starts' => self::date($in['policy_start'] ?? null),
             'cover' => ['type' => $in['cover_type'] ?? 'comprehensive', 'repair' => $in['repair'] ?? null],
             'insurers' => $insurers,
-            'quotes' => $qr->quotes()->orderBy('total')->get()->map(fn (Quote $q) => self::quote($q))->all(),
+            'quotes' => $qr->quotes()->orderBy('total')->get()->map(fn (Quote $q) => self::quote($q, $qr))->all(),
             'statusUrl' => route('motor.status', $qr),
             'compareUrl' => route('motor.compare', $qr),
         ];
     }
 
-    public static function quote(Quote $q): array
+    public static function quote(Quote $q, ?QuoteRequest $qr = null): array
     {
+        $qr ??= $q->quoteRequest;
+
         return [
             'id' => $q->id,
             'insurer' => $q->insurer,
@@ -98,6 +100,7 @@ final class MotorPresenter
             'validUntil' => self::date($q->valid_until),
             'ref' => $q->insurer_ref ?: substr((string) ($q->raw['request_id'] ?? ''), 0, 8),
             'selectUrl' => route('motor.select', $q),
+            'detailsUrl' => route('motor.plan', ['quoteRequest' => $qr, 'quote' => $q]),
         ];
     }
 

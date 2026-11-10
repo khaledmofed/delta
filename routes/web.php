@@ -14,6 +14,7 @@ Route::view('/', 'site.home')->name('home');
 Route::view('/about', 'site.about')->name('about');
 Route::view('/services', 'site.services')->name('services');
 Route::view('/contact', 'site.contact')->name('contact');
+Route::view('/claims', 'site.claims')->name('claims');
 
 foreach (array_keys(config('site.services')) as $product) {
     Route::view("/{$product}-insurance", "site.products.{$product}")->name("products.{$product}");
@@ -29,6 +30,7 @@ Route::controller(QuoteController::class)->group(function () {
     Route::get('/motor-quote/{quoteRequest}/results', 'results')->name('motor.results');
     Route::get('/motor-quote/{quoteRequest}/status', 'status')->name('motor.status');
     Route::get('/motor-quote/{quoteRequest}/compare', 'compare')->name('motor.compare');
+    Route::get('/motor-quote/{quoteRequest}/offers/{quote}', 'plan')->whereNumber('quote')->name('motor.plan');
     Route::post('/motor/offers/{quote}/select', 'select')->name('motor.select');
 });
 Route::controller(OrderController::class)->prefix('/motor/orders/{order}')->group(function () {

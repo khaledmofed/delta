@@ -28,6 +28,22 @@ class Lead extends Model
 
     public function productName(): string
     {
-        return $this->product === 'general' ? 'General enquiry' : config("site.services.{$this->product}.name", ucfirst($this->product));
+        return match ($this->product) {
+            'general' => 'General enquiry',
+            'claims' => 'Claims & Support',
+            default => config("site.services.{$this->product}.name", ucfirst($this->product)),
+        };
+    }
+
+    /** Claims & Support details as label => value (request type, policy, insurer), empty values skipped. */
+    public function supportDetails(): array
+    {
+        $d = $this->data ?? [];
+
+        return array_filter([
+            'Request type' => isset($d['request_type']) ? config("site.claims.request_types.{$d['request_type']}", $d['request_type']) : null,
+            'Policy number' => $d['policy_no'] ?? null,
+            'Insurer' => isset($d['insurer']) ? ($d['insurer'] === 'other' ? 'Other insurer' : config("insurers.providers.{$d['insurer']}.name", $d['insurer'])) : null,
+        ]);
     }
 }

@@ -210,9 +210,6 @@
     }
     if (!o) {
       o = {};
-      if (p.get("make")) o.make = p.get("make");
-      if (p.get("model")) o.model = p.get("model");
-      if (p.get("year")) o.year = p.get("year");
       // demo prefill so a presentation can move fast (demo mode only)
       if (M.demo && p.get("demo") !== "0") {
         var t = new Date();
@@ -221,6 +218,10 @@
           trafficTranType: "103", chassis: "JTMHV05J604123456", tcfNumber: "10234567", plateSource: "3000", plateCode: "3", regNumber: "45120", regDt: isoDate(U.addDays(t, -340)) });
       }
     }
+    // Quick quote (home hero / motor page) always wins over a saved draft or the demo data.
+    var fromQuick = false;
+    ["make", "model", "year", "plateSource"].forEach(function (k) { if (p.get(k)) { o[k] = p.get(k); fromQuick = true; } });
+    if (fromQuick && p.get("make") && !p.get("model")) o.model = "";
     applyValues(o);
   }
 

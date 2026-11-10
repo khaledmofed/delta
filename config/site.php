@@ -27,6 +27,23 @@ return [
     'leads_email' => env('LEADS_NOTIFY_EMAIL', 'dis@deltains-brokers.com'),
     // Internal alerts from the motor journey (new policy, payment failed, insurer refused checkout).
     'ops_email' => env('OPS_NOTIFY_EMAIL', env('LEADS_NOTIFY_EMAIL', 'dis@deltains-brokers.com')),
+    // Claims & Support page (/claims). Help requests are saved as leads with product "claims".
+    'claims' => [
+        'request_types' => [
+            'new_claim' => 'Report a new claim',
+            'claim_followup' => 'Follow up on a claim',
+            'policy_change' => 'Change my policy',
+            'renewal' => 'Renewal',
+            'documents' => 'Policy documents',
+            'other' => 'Something else',
+        ],
+        // Official UAE emergency numbers.
+        'emergency' => [
+            ['999', 'Police', 'fa-shield-halved'],
+            ['998', 'Ambulance', 'fa-truck-medical'],
+            ['997', 'Civil Defence', 'fa-fire-extinguisher'],
+        ],
+    ],
     'emirates' => ['Sharjah', 'Dubai', 'Abu Dhabi', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'],
     'contact_prefs' => ['Phone call', 'WhatsApp', 'Email'],
 

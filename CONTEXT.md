@@ -172,12 +172,18 @@ Last updated: 10-Nov-2026.
    - Emails (queued Mailables): `LeadReceived` to the customer (reply-to Delta) and `NewLeadAlert` to `LEADS_NOTIFY_EMAIL` (reply-to the customer, link to the admin panel). Locally `MAIL_MAILER=log`. A mail failure never loses the lead.
    - Spam: hidden honeypot field (bots get a normal-looking answer, nothing is saved) + 5 requests per minute per IP.
    - **On the server:** set `MAIL_MAILER=smtp` and the SMTP credentials, and keep the queue worker running (emails are queued).
-7. **Still open in the journey:**
+7. ✅ **Website improvements from `Delta_Visual_Website_Improvement_Examples.pptx`** (done 10-Nov-2026, covered by `tests/Feature/SiteImprovementsTest`):
+   - **Home hero quick quote** (slide 3, `partials/site/hero-quote`): make, model, year, registration emirate (DIN plate sources) in the hero, "Get motor quotes" / "Speak to an advisor" buttons. It replaces the hero photo with sample prices and the dark quote bar. `delta.js` sends every filled field to `/motor-quote`; `motor-quote.js` prefills them and they win over a saved draft.
+   - **Plan details** (slides 6–7, `/motor-quote/{ref}/offers/{quote}`, "View details" on each result): every mandatory and optional cover with its price, repair basis, sum insured, excess, key terms and the selected plan with total (including the add-ons asked in the wizard). Only insurer data: there is no exclusions list or policy wording from DIN yet, so the page offers to send them via an advisor.
+   - **Claims & Support** (`/claims`, top menu, mobile menu and footer): UAE emergency numbers (999 / 998 / 997), how to claim in 5 steps, documents checklist, FAQ and a help form saved as a lead (`product = claims`, `data`: request_type, policy_no, insurer) with the usual emails and Admin → Leads filter.
+   - **Insurer claims hotlines:** `DIN_CLAIMS_PHONE` / `AWNIC_CLAIMS_PHONE` in `.env`, empty until confirmed by each insurer; until then the page tells customers to call Delta.
+   - **Still on the home page from the prototype:** the "How it works" offer card with sample prices (Orient / Sukoon / ADNIC, AED 6,812 ...) and the insurer logo strip marked "demo — to be confirmed". Replace them with real insurers before launch.
+8. **Still open in the journey:**
    - Payment end to end on DIN UAT (blocked by 8112; then a test card is needed).
    - Policy PDF download, then email (policy documents are already stored on the private disk when DIN returns them).
    - Vehicle lookup by chassis (insurer EDATA): the "Find vehicle" button only guesses in demo mode.
    - AWNIC needs `insurer_codes.meta.din` mappings and make/model codes before it can quote.
-8. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.
+9. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.
 
 ## 6. Hosting decisions
 

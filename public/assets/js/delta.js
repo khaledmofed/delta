@@ -81,11 +81,11 @@
       }
       form.addEventListener("submit", function (e) {
         e.preventDefault();
+        // Every filled field (make, model, year, registration emirate...) prefills the motor wizard.
         var p = new URLSearchParams();
-        if (mk && mk.value) p.set("make", mk.value);
-        if (md && md.value) p.set("model", md.value);
-        if (yr && yr.value) p.set("year", yr.value);
-        location.href = "/motor-quote" + (p.toString() ? "?" + p.toString() : "");
+        $$("select[name], input[name]", form).forEach(function (f) { if (f.value) p.set(f.name, f.value); });
+        var base = form.getAttribute("action") || "/motor-quote";
+        location.href = base + (p.toString() ? "?" + p.toString() : "");
       });
     });
   }
