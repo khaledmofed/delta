@@ -163,7 +163,12 @@ Last updated: 10-Nov-2026.
    - Policy PDF download, then email (policy documents are already stored on the private disk when DIN returns them).
    - Vehicle lookup by chassis (insurer EDATA): the "Find vehicle" button only guesses in demo mode.
    - AWNIC needs `insurer_codes.meta.din` mappings and make/model codes before it can quote.
-6. **Lead forms** for the non-digital products (the website forms still save to the browser only; the admin Leads list is ready for them).
+6. ✅ **Lead forms** (done 10-Nov-2026, covered by `tests/Feature/LeadFormsTest`):
+   - The five product pages ("Request a quote") and the contact page post to `POST /leads` (`LeadController`, `LeadRequest`). Same markup; `delta.js` `initLeadForms` sends with fetch and shows the thank-you box with the real reference. Without JavaScript the form posts normally and the page shows a toast.
+   - Saved in `leads` (`data`: message, contact_pref, emirate, source, page), status `new`; visible in Admin → Leads and on the dashboard.
+   - Emails (queued Mailables): `LeadReceived` to the customer (reply-to Delta) and `NewLeadAlert` to `LEADS_NOTIFY_EMAIL` (reply-to the customer, link to the admin panel). Locally `MAIL_MAILER=log`. A mail failure never loses the lead.
+   - Spam: hidden honeypot field (bots get a normal-looking answer, nothing is saved) + 5 requests per minute per IP.
+   - **On the server:** set `MAIL_MAILER=smtp` and the SMTP credentials, and keep the queue worker running (emails are queued).
 7. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.
 
 ## 6. Hosting decisions

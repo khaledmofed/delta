@@ -26,6 +26,9 @@
 @if (config('site.demo'))
 @include('partials.site.demo-panel')
 @endif
+@if (session('lead_reference'))
+    <script>window.DELTA_LEAD_SENT = @json(session('lead_reference'));</script>
+@endif
     <script src="{{ asset('assets/js/delta-data.js') }}"></script>
     <script src="{{ asset('assets/js/delta-store.js') }}"></script>
     <script src="{{ asset('assets/js/delta.js') }}"></script>

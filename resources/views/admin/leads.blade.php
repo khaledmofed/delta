@@ -17,9 +17,9 @@
 @foreach ($leads as $l)
 @php($svc = config('site.services.'.$l->product))
 <tr><td><b>{{ $l->reference }}</b><span class="sub">{{ UI::dt($l->created_at) }}</span></td>
-<td>@if ($svc)<span class="who"><i class="fal {{ $svc['icon'] }}" style="color:var(--teal)"></i>{{ $svc['name'] }}</span>@else{{ ucfirst($l->product) }}@endif</td>
-<td>{{ $l->name }}<span class="sub">{{ $l->mobile }}{{ $l->email ? ' · '.$l->email : '' }}</span></td>
-<td><span style="max-width:280px;display:inline-block">{{ $l->data['message'] ?? '—' }}</span></td>
+<td>@if ($svc)<span class="who"><i class="fal {{ $svc['icon'] }}" style="color:var(--teal)"></i>{{ $svc['name'] }}</span>@else{{ $l->productName() }}@endif</td>
+<td>{{ $l->name }}<span class="sub"><a href="tel:+{{ $l->mobile }}">+{{ $l->mobile }}</a>{{ $l->email ? ' · '.$l->email : '' }}</span></td>
+<td><span style="max-width:300px;display:inline-block;white-space:pre-line">{{ \Illuminate\Support\Str::limit($l->data['message'] ?? '—', 240) }}</span><span class="sub">{{ implode(' · ', array_filter([$l->data['contact_pref'] ?? null, $l->data['emirate'] ?? null, ($l->data['source'] ?? '') === 'contact' ? 'Contact page' : (isset($l->data['source']) ? 'Product page' : null)])) }}</span></td>
 @can('leads.update')
 <td><form method="post" action="{{ route('admin.leads.update', $l) }}">@csrf @method('patch')<select class="sel" name="owner_id" data-autosubmit><option value="">Unassigned</option>@foreach ($staff as $u)<option value="{{ $u->id }}" @selected($l->owner_id === $u->id)>{{ $u->name }}</option>@endforeach</select></form></td>
 <td><form method="post" action="{{ route('admin.leads.update', $l) }}">@csrf @method('patch')<select class="sel" name="status" data-autosubmit>@foreach ($statuses as $k => $v)<option value="{{ $k }}" @selected($l->status === $k)>{{ $v }}</option>@endforeach</select></form></td>

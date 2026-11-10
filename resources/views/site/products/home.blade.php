@@ -38,7 +38,8 @@
             <div class="row g-5">
               <div class="col-lg-5"><span class="eyebrow">FAQ</span><h2 class="h-2 mb-30">Home Insurance questions</h2><div class="faq-x"><details open><summary>I rent my apartment — do I need home insurance?</summary><p>Your landlord usually insures the building, but not your belongings. Contents insurance protects your furniture, electronics and personal items.</p></details><details ><summary>How do I value my contents?</summary><p>Our advisors can help you estimate the replacement value of your contents so you are not under-insured.</p></details><details ><summary>Are valuables covered automatically?</summary><p>High-value items often need to be listed separately. We will explain the limits of each plan.</p></details></div></div>
               <div class="col-lg-7">
-            <form class="d-card d-card--glow" data-lead-form data-product="home" novalidate style="padding:36px">
+            <form class="d-card d-card--glow" data-lead-form method="post" action="{{ route('leads.store') }}" data-product="home" novalidate style="padding:36px">
+              @include('partials.site.lead-fields', ['source' => 'product'])
               <h3 class="d-h3 mb-10">Request a quote</h3>
               <p class="d-muted-2 mb-25">Share a few details and a Delta advisor will prepare options for you.</p>
               <div class="row g-3">

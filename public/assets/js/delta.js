@@ -90,21 +90,46 @@
     });
   }
 
-  /* consultation / request-a-quote forms for non-digital products */
+  /* consultation / request-a-quote forms for non-digital products + contact page -> LeadController (leads table, emails) */
+  function thanks(name, ref) {
+    return '<div class="text-center" style="padding:30px 10px"><span style="width:76px;height:76px;border-radius:50%;background:var(--mint);color:var(--navy);display:inline-grid;place-items:center;font-size:30px"><i class="far fa-check"></i></span><h3 class="d-h3 mt-20">Thank you, ' + U.esc(name) + '.</h3><p class="d-muted mt-10">Your request <b style="color:var(--ink)">' + U.esc(ref) + '</b> has been received. A Delta advisor will contact you shortly.</p><p class="d-muted-2" style="font-size:13px;margin:0">We have sent a confirmation to your email.</p></div>';
+  }
   function initLeadForms() {
     $$("[data-lead-form]").forEach(function (form) {
+      form.addEventListener("input", function (e) { e.target.classList.remove("is-invalid"); });
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var ok = true;
-        $$("[required]", form).forEach(function (f) { var bad = !String(f.value).trim(); f.classList.toggle("is-invalid", bad); if (bad) ok = false; });
+        $$("[required]", form).forEach(function (f) {
+          var bad = f.type === "checkbox" ? !f.checked : !String(f.value).trim();
+          if (f.type === "email" && !bad) bad = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.value);
+          if (f.name === "mobile" && !bad) bad = !/^(971|0)?5\d{8}$/.test(String(f.value).replace(/\D/g, ""));
+          f.classList.toggle("is-invalid", bad); if (bad) ok = false;
+        });
         if (!ok) { toast("Please complete the required fields.", "err"); return; }
-        var data = {};
-        $$("input,select,textarea", form).forEach(function (f) { if (f.name) data[f.name] = f.type === "checkbox" ? f.checked : f.value; });
-        data.product = data.product || form.getAttribute("data-product") || "general";
-        var id = S.createLead(data);
-        form.innerHTML = '<div class="text-center" style="padding:30px 10px"><span style="width:76px;height:76px;border-radius:50%;background:var(--mint);color:var(--navy);display:inline-grid;place-items:center;font-size:30px"><i class="far fa-check"></i></span><h3 class="d-h3 mt-20">Thank you, ' + U.esc((data.name || "").split(" ")[0]) + '.</h3><p class="d-muted mt-10">Your request <b style="color:var(--ink)">' + id + '</b> has been received. A Delta advisor will contact you shortly.</p><p class="d-muted-2" style="font-size:13px;margin:0">Demo: this request now appears in Admin → Leads.</p></div>';
+        var btn = form.querySelector("button[type=submit]");
+        if (btn) btn.disabled = true;
+        fetch(form.action, { method: "POST", body: new FormData(form), headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" })
+          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
+          .then(function (r) {
+            if (btn) btn.disabled = false;
+            if (r.status === 200 && r.body.reference) { form.innerHTML = thanks(r.body.name || "", r.body.reference); return; }
+            if (r.status === 422) {
+              Object.keys(r.body.errors || {}).forEach(function (k) { var f = form.elements[k]; if (f && f.classList) f.classList.add("is-invalid"); });
+              var first = Object.keys(r.body.errors || {})[0];
+              toast(first ? r.body.errors[first][0] : "Please check the highlighted fields.", "err");
+              return;
+            }
+            if (r.status === 429) { toast("Too many requests. Please wait a minute and try again.", "err"); return; }
+            if (r.status === 419) { toast("Your session expired. Please refresh the page and try again.", "err"); return; }
+            toast("We couldn’t send your request. Please call us on +971 6 574 7420.", "err");
+          })
+          .catch(function () { if (btn) btn.disabled = false; toast("Connection problem. Please try again.", "err"); });
       });
     });
+    // Without JavaScript the form posts normally and comes back here with the reference.
+    var done = w.DELTA_LEAD_SENT;
+    if (done) toast("Thank you — your request " + U.esc(done) + " has been received.", "ok");
   }
 
   d.addEventListener("DOMContentLoaded", function () {

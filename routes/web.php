@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\Motor\OrderController;
 use App\Http\Controllers\Motor\QuoteController;
 use App\Http\Controllers\PaymentReturnController;
@@ -16,6 +17,9 @@ Route::view('/contact', 'site.contact')->name('contact');
 foreach (array_keys(config('site.services')) as $product) {
     Route::view("/{$product}-insurance", "site.products.{$product}")->name("products.{$product}");
 }
+
+// Lead forms (product pages "Request a quote" + contact page).
+Route::post('/leads', [LeadController::class, 'store'])->middleware('throttle:5,1')->name('leads.store');
 
 // Motor journey: quote -> compare -> checkout -> insurer payment page -> confirmation.
 Route::controller(QuoteController::class)->group(function () {

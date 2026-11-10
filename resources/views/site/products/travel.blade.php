@@ -38,7 +38,8 @@
             <div class="row g-5">
               <div class="col-lg-5"><span class="eyebrow">FAQ</span><h2 class="h-2 mb-30">Travel Insurance questions</h2><div class="faq-x"><details open><summary>Do I need travel insurance for a Schengen visa?</summary><p>Schengen visa applications require travel medical insurance meeting minimum requirements. We can arrange a compliant plan.</p></details><details ><summary>Single trip or annual plan?</summary><p>If you travel more than two or three times a year, an annual multi-trip plan is often better value.</p></details><details ><summary>Can I buy travel insurance after booking?</summary><p>Yes — but buying soon after booking gives you cancellation cover for longer.</p></details></div></div>
               <div class="col-lg-7">
-            <form class="d-card d-card--glow" data-lead-form data-product="travel" novalidate style="padding:36px">
+            <form class="d-card d-card--glow" data-lead-form method="post" action="{{ route('leads.store') }}" data-product="travel" novalidate style="padding:36px">
+              @include('partials.site.lead-fields', ['source' => 'product'])
               <h3 class="d-h3 mb-10">Request a quote</h3>
               <p class="d-muted-2 mb-25">Share a few details and a Delta advisor will prepare options for you.</p>
               <div class="row g-3">

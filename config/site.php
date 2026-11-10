@@ -23,6 +23,11 @@ return [
         'pet' => ['name' => 'Pet Insurance', 'icon' => 'fa-paw', 'online' => false, 'desc' => 'Help with vet bills for cats and dogs.'],
     ],
 
+    // Lead forms (product pages + contact). New leads are emailed to this team inbox.
+    'leads_email' => env('LEADS_NOTIFY_EMAIL', 'dis@deltains-brokers.com'),
+    'emirates' => ['Sharjah', 'Dubai', 'Abu Dhabi', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'],
+    'contact_prefs' => ['Phone call', 'WhatsApp', 'Email'],
+
     // Pages not converted to Blade yet (motor journey, accounts, demo screens).
     'links' => [
         'motor_quote' => '/motor-quote',

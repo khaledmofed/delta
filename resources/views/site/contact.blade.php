@@ -35,7 +35,8 @@
                 </div>
               </div>
               <div class="col-lg-7">
-                <form class="d-card d-card--glow" data-lead-form novalidate style="padding:40px">
+                <form class="d-card d-card--glow" data-lead-form method="post" action="{{ route('leads.store') }}" novalidate style="padding:40px">
+              @include('partials.site.lead-fields', ['source' => 'contact'])
                   <h3 class="d-h3 mb-10">Send us a message</h3>
                   <p class="d-muted-2 mb-25">We usually reply within one working day.</p>
                   <div class="row g-3">
