@@ -71,13 +71,25 @@ class DinAdapter implements InsurerAdapter
     public function quote(MotorQuoteInput $input, string $requestId): QuoteResult
     {
         $offers = [];
+        $tpl = [];
         $lastError = [null, null];
         foreach (DinMapper::repairVariants($input) as $i => $agency) {
             // DIN ties one quote to one X-REQUEST-ID, so each repair variant gets its own id.
             $rid = $i === 0 ? $requestId : $requestId.'-A';
             $json = $this->call('generateQuote', 'POST', '/api/v1/Insurance/GenerateQuote', DinMapper::quotePayload($input, $agency), $rid);
             if (DinMapper::isOk($json)) {
-                $offers = array_merge($offers, DinMapper::offers($json, $agency, $rid, $input->coverType));
+                // Keep every product DIN offers (it may return only Third Party for a vehicle even when
+                // comprehensive was asked); the results page filters by cover type. Third Party does not
+                // depend on the repair variant, so it is kept once.
+                foreach (DinMapper::offers($json, $agency, $rid) as $offer) {
+                    if ($offer->coverType === 'third_party') {
+                        if (isset($tpl[$offer->planCode])) {
+                            continue;
+                        }
+                        $tpl[$offer->planCode] = true;
+                    }
+                    $offers[] = $offer;
+                }
             } else {
                 $lastError = DinMapper::error($json);
             }

@@ -1,4 +1,4 @@
-{{-- Prototype presentation controls (localStorage simulation). Hidden unless config('site.demo_panel'). --}}
+{{-- Prototype presentation controls (localStorage simulation). Hidden unless config('site.demo'). --}}
     <div class="d-demo-fab">
       <button type="button"><i class="fas fa-flask"></i> Demo controls</button>
       <div class="d-demo-panel">

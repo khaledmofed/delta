@@ -23,7 +23,7 @@
 @yield('content')
     </main>
 @include('partials.site.footer')
-@if (config('site.demo_panel'))
+@if (config('site.demo'))
 @include('partials.site.demo-panel')
 @endif
     <script src="{{ asset('assets/js/delta-data.js') }}"></script>

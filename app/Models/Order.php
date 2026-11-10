@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -30,6 +31,11 @@ class Order extends Model
     protected static function booted(): void
     {
         static::creating(fn (self $m) => $m->reference ??= 'ORD-'.now()->format('Y').'-'.Str::upper(Str::random(8)));
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'reference';
     }
 
     public function transition(string $state, ?string $note = null, string $actor = 'system'): void
@@ -65,5 +71,10 @@ class Order extends Model
     public function policy(): HasOne
     {
         return $this->hasOne(Policy::class);
+    }
+
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(Document::class, 'documentable');
     }
 }

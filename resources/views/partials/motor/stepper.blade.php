@@ -1,0 +1,2 @@
+{{-- Journey stepper after the quote wizard. $active = 1..5 (Quote, Compare, Checkout, Payment, Policy). --}}
+<ul class="d-stepper" style="padding:0">@foreach (['Quote', 'Compare', 'Checkout', 'Payment', 'Policy'] as $i => $label)<li class="{{ $i + 1 < $active ? 'is-done' : ($i + 1 === $active ? 'is-active' : '') }}" data-step-ind="{{ $i + 1 }}"><span class="n"><span>{{ $i + 1 }}</span></span>{{ $label }}</li>@endforeach</ul>

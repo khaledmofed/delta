@@ -85,7 +85,7 @@
         if (mk && mk.value) p.set("make", mk.value);
         if (md && md.value) p.set("model", md.value);
         if (yr && yr.value) p.set("year", yr.value);
-        location.href = "motor-quote.html" + (p.toString() ? "?" + p.toString() : "");
+        location.href = "/motor-quote" + (p.toString() ? "?" + p.toString() : "");
       });
     });
   }

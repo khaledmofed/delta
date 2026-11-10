@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MotorOrders;
+use App\Support\JourneyAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -11,10 +13,17 @@ use Illuminate\Support\Facades\Log;
  */
 class PaymentReturnController extends Controller
 {
-    public function __invoke(Request $request, string $result)
+    public function __invoke(Request $request, string $result, MotorOrders $orders)
     {
-        Log::info('Payment return', ['result' => $result, 'query' => $request->query()]);
+        Log::info('Payment return', ['result' => $result, 'query' => array_keys($request->query())]);
 
-        return view('site.payment-return', ['result' => $result]);
+        $order = JourneyAccess::currentOrder();
+        if (! $order) {
+            // Different browser / expired session: the scheduled poll will still confirm the order.
+            return view('site.payment-return', ['result' => $result]);
+        }
+        $orders->refresh($order);
+
+        return redirect()->route('motor.confirmation', $order);
     }
 }

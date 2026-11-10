@@ -708,7 +708,7 @@
   };
 
   /* Insurer logo with automatic fallback to a monogram when the logo file is missing */
-  var MONO = { din: ["DI", "#0B5E8E"], sukoon: ["SK", "#2E7D6B"], orient: ["OI", "#8A5A1F"], adnic: ["AD", "#6B3FA0"], gig: ["GG", "#B03A48"], albuhaira: ["AB", "#1F6FA8"] };
+  var MONO = { awnic: ["AW", "#7A5C2E"], din: ["DI", "#0B5E8E"], sukoon: ["SK", "#2E7D6B"], orient: ["OI", "#8A5A1F"], adnic: ["AD", "#6B3FA0"], gig: ["GG", "#B03A48"], albuhaira: ["AB", "#1F6FA8"] };
   function logoFallback(img) {
     var pid = img.getAttribute("data-pid"), m = MONO[pid] || ["?", "#256383"], wrap = img.parentNode;
     if (!wrap) return;

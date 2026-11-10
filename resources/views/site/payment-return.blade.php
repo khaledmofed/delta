@@ -2,14 +2,11 @@
 
 @section('title', 'Payment — Delta Insurance')
 
+{{-- Shown only when the returning browser has no open order in its session.
+     The URL result is never trusted: the insurer is asked for the real status. --}}
 @section('content')
     <div class="card">
-        @if ($result === 'success')
-            <h1>Thank you — we are confirming your payment</h1>
-            <p>We are requesting your policy from the insurer. You will receive it by email shortly.</p>
-        @else
-            <h1>Payment was not completed</h1>
-            <p>No amount was charged. You can try again or contact us on +971 6 574 7420.</p>
-        @endif
+        <h1>We are checking your payment with the insurer</h1>
+        <p>We confirm every payment directly with the insurer. If you started your purchase in another browser, please continue there, or call us on {{ config('site.phone') }}.</p>
     </div>
 @endsection

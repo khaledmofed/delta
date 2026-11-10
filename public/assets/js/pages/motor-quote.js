@@ -1,10 +1,12 @@
 /* Motor quote wizard — collects everything the insurer API needs (Dubai Insurance / IIRIS GenerateQuote),
-   runs the insurer eligibility rules up front, then runs the quote engine. */
+   runs the insurer eligibility rules up front, then submits to the Laravel backend (MotorQuoteRequest),
+   which validates again, stores the documents privately and starts the quote engine. */
 (function () {
   "use strict";
   var D = window.DELTA, S = D.store, U = D.util, ui = D.ui, C = D.DIN_CODES;
-  var form, step = 1, MAX = 5, DRAFT_KEY = "delta_quote_draft_v2";
-  var docs = {};
+  var M = window.MOTOR || { demo: false, insurers: [], contactUrl: "/contact" };
+  var form, step = 1, MAX = 5, DRAFT_KEY = "delta_quote_draft_v2", LAST_KEY = "delta_last_form";
+  var docs = {};   // type => { type, label, fileName, size, file?: File, sample?: true }
 
   function opt(list, ph) { return '<option value="">' + (ph || "Select") + "</option>" + list.map(function (v) { return "<option>" + v + "</option>"; }).join(""); }
   function codeOpt(list, ph) { return '<option value="">' + (ph || "Select") + "</option>" + list.map(function (v) { return '<option value="' + v[0] + '">' + U.esc(v[1]) + "</option>"; }).join(""); }
@@ -48,6 +50,12 @@
     var vin = String(val("chassis")).trim().toUpperCase();
     var hint = document.getElementById("vehHint");
     if (vin.length !== 17) { f("chassis").classList.add("is-invalid"); ui.toast("Enter the 17-character chassis number first.", "err"); return; }
+    if (!M.demo) {
+      // No insurer vehicle lookup (EDATA) is connected yet: never guess the vehicle outside demo mode.
+      hint.innerHTML = '<i class="fal fa-circle-info"></i> Please select the make, model and year as shown on your Mulkiya.';
+      f("make").focus();
+      return;
+    }
     var make = WMI[vin.slice(0, 2)] || Object.keys(D.VEHICLES)[U.hash(vin) % Object.keys(D.VEHICLES).length];
     var models = Object.keys(D.VEHICLES[make]);
     var model = models[U.hash(vin + "m") % models.length];
@@ -80,7 +88,7 @@
   function checkElig(n, toast) {
     var r = rules(n), box = form.querySelector('[data-elig="' + n + '"]');
     if (!box) return true;
-    box.innerHTML = r.length ? '<div class="d-elig__box"><i class="fal fa-triangle-exclamation"></i><div><b>We can’t complete this online</b><ul>' + r.map(function (x) { return "<li>" + x[1] + ' <span class="code">' + x[0] + "</span></li>"; }).join("") + '</ul><span>Our advisors can still help — <a class="d-link" href="contact.html">request a call back</a> or call <a class="d-link" href="tel:+97165747420">+971 6 574 7420</a>.</span></div></div>' : "";
+    box.innerHTML = r.length ? '<div class="d-elig__box"><i class="fal fa-triangle-exclamation"></i><div><b>We can’t complete this online</b><ul>' + r.map(function (x) { return "<li>" + x[1] + ' <span class="code">' + x[0] + "</span></li>"; }).join("") + '</ul><span>Our advisors can still help — <a class="d-link" href="' + M.contactUrl + '">request a call back</a> or call <a class="d-link" href="tel:+97165747420">+971 6 574 7420</a>.</span></div></div>' : "";
     if (r.length && toast) ui.toast("This application can’t be completed online — see the message below.", "err");
     return !r.length;
   }
@@ -118,10 +126,11 @@
   function uploadTile(dt) {
     var done = docs[dt.id];
     var alt = dt.altNew && val("isNew") === "yes" ? dt.altNew : "Clear photo or scan";
-    return '<div class="col-md-6"><div class="d-upload' + (done ? " is-done" : "") + '" data-doc="' + dt.id + '"><input type="file" accept=".pdf,.jpg,.jpeg,.png" aria-label="' + dt.label + '" /><span class="ic">' + (done ? '<i class="fas fa-circle-check"></i>' : '<i class="fal fa-cloud-arrow-up"></i>') + '</span><div style="flex:1;min-width:0"><b>' + dt.label + ' <em style="color:var(--bad);font-style:normal">*</em></b><span class="meta"><small>' + (done ? U.esc(done.fileName) + " · " + Math.round(done.size / 1024) + " KB" : alt) + '</small></span><div class="bar"><i></i></div></div><button type="button" class="d-btn d-btn--ghost d-btn--sm" data-sample="' + dt.id + '" style="position:relative;z-index:2">Sample</button></div></div>';
+    return '<div class="col-md-6"><div class="d-upload' + (done ? " is-done" : "") + '" data-doc="' + dt.id + '"><input type="file" accept=".pdf,.jpg,.jpeg,.png" aria-label="' + dt.label + '" /><span class="ic">' + (done ? '<i class="fas fa-circle-check"></i>' : '<i class="fal fa-cloud-arrow-up"></i>') + '</span><div style="flex:1;min-width:0"><b>' + dt.label + ' <em style="color:var(--bad);font-style:normal">*</em></b><span class="meta"><small>' + (done ? U.esc(done.fileName) + " · " + Math.round(done.size / 1024) + " KB" : alt) + '</small></span><div class="bar"><i></i></div></div>' + (M.demo ? '<button type="button" class="d-btn d-btn--ghost d-btn--sm" data-sample="' + dt.id + '" style="position:relative;z-index:2">Sample</button>' : "") + "</div></div>";
   }
   function renderUploads() { document.getElementById("uploads").innerHTML = docTypes().map(uploadTile).join(""); }
-  function setDoc(tile, name, size, instant) {
+  /* file: the real File to upload; null = demo sample (the server substitutes a placeholder in demo mode only) */
+  function setDoc(tile, name, size, instant, file) {
     var id = tile.getAttribute("data-doc");
     var dt = D.DOCUMENT_TYPES.filter(function (x) { return x.id === id; })[0];
     function finish() {
@@ -129,6 +138,7 @@
       tile.querySelector(".ic").innerHTML = '<i class="fas fa-circle-check"></i>';
       tile.querySelector(".meta").innerHTML = "<small>" + U.esc(name) + " · " + Math.round(size / 1024) + " KB · encrypted</small>";
       docs[id] = { type: id, din: dt.din, label: dt.label, fileName: name, size: size };
+      if (file) docs[id].file = file; else docs[id].sample = true;
       saveDraft();
     }
     if (instant) return finish();
@@ -147,7 +157,7 @@
         nationalityCode: val("nationality"), nationality: label(C.nationality, val("nationality")), emirateCode: val("emirate"), emirate: label(C.emirate, val("emirate")),
         emiratesId: val("emiratesId"), eidExpiry: val("eidExpiry"), licenseNo: val("licenseNo"), licenseFrom: val("licenseFrom"), licenseTo: val("licenseTo"),
         experience: val("licenseFrom") ? Math.floor(years(val("licenseFrom"))) : 5, ncdYears: ncd, noClaimsYears: ncd === "" ? 0 : Number(ncd) },
-      vehicle: { make: mk, model: md, year: yr, value: mk && md && yr ? S.vehicleValue(mk, md, yr) : 0, body: S.bodyOf(mk, md), chassis: String(val("chassis")).toUpperCase(), tcfNumber: val("tcfNumber"),
+      vehicle: { make: mk, model: md, year: yr, value: M.demo && mk && md && yr ? S.vehicleValue(mk, md, yr) : 0, body: S.bodyOf(mk, md), chassis: String(val("chassis")).toUpperCase(), tcfNumber: val("tcfNumber"),
         trafficTranType: val("trafficTranType"), isNew: val("isNew") === "yes", gccSpec: val("gccSpec") === "yes", ev: val("ev") === "yes",
         plateSource: val("plateSource"), regEmirate: label(C.plateSource, val("plateSource")), plateCode: val("plateCode"), plate: val("regNumber"), regDt: val("regDt"),
         financed: financed(), bankCode: financed() ? val("bank") : "", bank: financed() ? label(C.bank, val("bank")) : "" },
@@ -175,7 +185,10 @@
 
   /* --------------------------------------------------------------- drafts */
   function saveDraft() {
-    var o = { _docs: docs };
+    // Files cannot be kept in sessionStorage: only demo samples survive a reload.
+    var keep = {};
+    Object.keys(docs).forEach(function (k) { if (docs[k].sample) keep[k] = docs[k]; });
+    var o = { _docs: keep };
     Array.prototype.forEach.call(form.elements, function (el) { if (!el.name || el.type === "file") return; if (el.type === "radio") { if (el.checked) o[el.name] = el.value; } else if (el.type === "checkbox") o[el.name] = el.checked; else o[el.name] = el.value; });
     try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(o)); } catch (e) {}
   }
@@ -193,16 +206,15 @@
     var o; try { o = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null"); } catch (e) {}
     var p = new URLSearchParams(location.search);
     if (!o && p.get("edit")) {
-      var last = S.quoteRequest(sessionStorage.getItem("delta_last_qr") || "");
-      if (last && last.form) o = last.form;
+      try { o = JSON.parse(sessionStorage.getItem(LAST_KEY) || "null"); } catch (e) {}
     }
     if (!o) {
       o = {};
       if (p.get("make")) o.make = p.get("make");
       if (p.get("model")) o.model = p.get("model");
       if (p.get("year")) o.year = p.get("year");
-      // demo prefill so a presentation can move fast
-      if (p.get("demo") !== "0") {
+      // demo prefill so a presentation can move fast (demo mode only)
+      if (M.demo && p.get("demo") !== "0") {
         var t = new Date();
         Object.assign(o, { name: "Omar Al Mansoori", nameAr: "عمر المنصوري", email: "omar@example.com", mobile: "50 100 4000", dob: "1986-04-12", gender: "M", nationality: "102", emirate: "02",
           emiratesId: "784-1986-1234567-1", eidExpiry: isoDate(U.addDays(t, 600)), licenseNo: "1234567", licenseFrom: "2010-06-01", licenseTo: isoDate(U.addDays(t, 900)), ncdYears: "3",
@@ -252,37 +264,89 @@
     document.getElementById("liveSummary").innerHTML = rows.map(function (r) { return '<div class="d-kv"><span>' + r[0] + "</span><b>" + U.esc(r[1]) + "</b></div>"; }).join("");
   }
 
-  function renderProviders() {
-    var list = S.providers().filter(function (p) { return p.enabled && p.products.indexOf("motor") > -1; });
-    document.getElementById("provList").innerHTML = list.map(function (p) {
-      var live = p.environment === "uat" || p.environment === "production";
-      return '<div class="d-flex align-items-center gap-2">' + ui.mono(p.id, "sm") + '<span style="color:var(--ink);font-size:14px">' + p.name + '</span><span class="ms-auto d-badge ' + (live ? "d-badge--online" : "d-badge--advisor") + '" style="font-size:11px">' + (live ? "Live API (UAT)" : "Demo") + "</span></div>";
-    }).join("");
+  /* Insurer list is rendered by the server (enabled insurers for motor). */
+  function renderProviders() {}
+
+  function logo(ins, size) {
+    return '<span class="ins-logo ' + (size ? "ins-logo--" + size : "") + '" title="' + U.esc(ins.name) + '"><img src="' + U.esc(ins.logo) + '" alt="' + U.esc(ins.name) + '" data-pid="' + U.esc(ins.code) + '" onerror="DELTA.util&&DELTA.util.logoFallback(this)" /></span>';
   }
 
   /* ---------------------------------------------------------------- submit */
+  function payload() {
+    var fd = new FormData(form);   // every named field, including _token
+    if (!financed()) fd.delete("bank");
+    docTypes().forEach(function (dt) {
+      var d = docs[dt.id];
+      if (!d) return;
+      if (d.file) fd.append("documents[" + dt.id + "]", d.file, d.fileName);
+      else if (d.sample) fd.append("samples[]", dt.id);
+    });
+    return fd;
+  }
+
+  /* 422 from MotorQuoteRequest: same presentation as the browser-side checks. */
+  function showServerErrors(res) {
+    var target = res.step || 1;
+    go(target);
+    (res.eligibility || []).forEach(function (e) {
+      var box = form.querySelector('[data-elig="' + e.step + '"]');
+      if (!box || e.step !== target) return;
+      var r = (res.eligibility || []).filter(function (x) { return x.step === e.step; });
+      box.innerHTML = '<div class="d-elig__box"><i class="fal fa-triangle-exclamation"></i><div><b>We can’t complete this online</b><ul>' + r.map(function (x) { return "<li>" + U.esc(x.message) + ' <span class="code">' + U.esc(x.code) + "</span></li>"; }).join("") + '</ul><span>Our advisors can still help — <a class="d-link" href="' + M.contactUrl + '">request a call back</a> or call <a class="d-link" href="tel:+97165747420">+971 6 574 7420</a>.</span></div></div>';
+    });
+    var first = null;
+    Object.keys(res.errors || {}).forEach(function (k) {
+      var m = k.match(/^documents\.(\w+)/);
+      if (m) {
+        var t = document.querySelector('[data-doc="' + m[1] + '"]');
+        if (t) t.classList.add("is-invalid");
+        document.getElementById("docErr").style.display = "block";
+        return;
+      }
+      if (/^consent/.test(k)) document.getElementById("consentErr").style.display = "block";
+      var el = f(k.split(".")[0]);
+      if (!el) return;
+      if (el.length && el[0] && el[0].type === "radio") el = el[0];
+      el.classList && el.classList.add("is-invalid");
+      var group = el.closest && el.closest(".d-input-group");
+      if (group) group.classList.add("is-invalid");
+      if (!first) first = el;
+    });
+    first && first.focus && first.focus();
+    ui.toast(res.message || "Please check the highlighted fields.", "err");
+  }
+
   function submit() {
-    var d = data();
-    var formState; try { formState = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null"); } catch (e) {}
-    try { sessionStorage.removeItem(DRAFT_KEY); } catch (e) {}
-    d.din = dinPayload(d);
-    d.form = formState;
-    var qr = S.createQuoteRequest(d);
-    try { sessionStorage.setItem("delta_last_qr", qr.id); } catch (e) {}
+    var btn = document.getElementById("nextBtn");
     var ov = document.getElementById("loadingOverlay");
     var list = document.getElementById("loadingList");
-    var provs = S.providers().filter(function (p) { return p.enabled && p.products.indexOf("motor") > -1; });
-    list.innerHTML = provs.map(function (p) { return '<div class="d-prov-row" id="lp-' + p.id + '">' + ui.mono(p.id) + '<div class="nm"><b>' + p.name + "</b><small>" + p.adapter + " · " + p.protocol + '</small></div><span class="st pending"><span class="d-mini-spin"></span> Requesting</span></div>'; }).join("");
+    var formState; try { formState = sessionStorage.getItem(DRAFT_KEY); } catch (e) {}
+    list.innerHTML = M.insurers.map(function (p) { return '<div class="d-prov-row" id="lp-' + p.code + '">' + logo(p) + '<div class="nm"><b>' + U.esc(p.name) + '</b><small>Secure insurer API</small></div><span class="st pending"><span class="d-mini-spin"></span> Requesting</span></div>'; }).join("");
+    document.getElementById("loadingMsg").textContent = "Contacting insurers in parallel…";
     ov.classList.add("open");
-    S.runQuoteEngine(qr.id, function (p, status, res) {
-      var el = document.querySelector("#lp-" + p.id + " .st");
-      if (!el || status === "pending") return;
-      el.className = "st " + status;
-      el.innerHTML = status === "success" ? '<i class="fas fa-circle-check"></i> ' + res.count + " offers · " + (res.ms / 1000).toFixed(1) + "s" : '<i class="fas fa-triangle-exclamation"></i> No response (timeout)';
-    }).then(function (r) {
-      document.getElementById("loadingMsg").textContent = r.quotes.length + " offers received. Preparing your comparison…";
-      setTimeout(function () { location.href = "quote-results.html?qr=" + encodeURIComponent(qr.id); }, 900);
-    });
+    btn.disabled = true;
+
+    fetch(form.action, { method: "POST", body: payload(), headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
+      .then(function (r) {
+        if (r.status === 200 && r.body.redirect) {
+          try { if (formState) sessionStorage.setItem(LAST_KEY, formState); sessionStorage.removeItem(DRAFT_KEY); } catch (e) {}
+          document.getElementById("loadingMsg").textContent = "Request received. Preparing your comparison…";
+          location.href = r.body.redirect;
+          return;
+        }
+        ov.classList.remove("open");
+        btn.disabled = false;
+        if (r.status === 422) { showServerErrors(r.body); return; }
+        if (r.status === 419) { ui.toast("Your session expired. Please refresh the page and try again.", "err"); return; }
+        if (r.status === 429) { ui.toast("Too many attempts. Please wait a minute and try again.", "err"); return; }
+        ui.toast("We couldn’t send your request. Please try again or call +971 6 574 7420.", "err");
+      })
+      .catch(function () {
+        ov.classList.remove("open");
+        btn.disabled = false;
+        ui.toast("Connection problem. Please check your internet connection and try again.", "err");
+      });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -301,7 +365,7 @@
       var file = e.target.files[0];
       if (file.size > 10 * 1024 * 1024) { ui.toast("File is larger than 10 MB.", "err"); return; }
       if (!/\.(pdf|jpe?g|png)$/i.test(file.name)) { ui.toast("Please upload a PDF, JPG or PNG file.", "err"); return; }
-      setDoc(e.target.closest(".d-upload"), file.name, file.size);
+      setDoc(e.target.closest(".d-upload"), file.name, file.size, false, file);
       renderSummary();
     });
     up.addEventListener("click", function (e) {
@@ -310,7 +374,8 @@
       setDoc(b.closest(".d-upload"), sampleName(b.getAttribute("data-sample")), 180000 + Math.round(Math.random() * 300000));
       setTimeout(renderSummary, 900);
     });
-    document.getElementById("allSamples").addEventListener("click", function () {
+    var allSamples = document.getElementById("allSamples");   // demo mode only
+    allSamples && allSamples.addEventListener("click", function () {
       up.querySelectorAll(".d-upload").forEach(function (t) { if (!t.classList.contains("is-done")) setDoc(t, sampleName(t.getAttribute("data-doc")), 180000 + Math.round(Math.random() * 300000), true); });
       document.getElementById("docErr").style.display = "none";
       renderSummary();

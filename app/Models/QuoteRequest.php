@@ -22,6 +22,11 @@ class QuoteRequest extends Model
         static::creating(fn (self $m) => $m->reference ??= 'QR-'.now()->format('ymd').'-'.Str::upper(Str::random(6)));
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'reference';
+    }
+
     public function quotes(): HasMany
     {
         return $this->hasMany(Quote::class);

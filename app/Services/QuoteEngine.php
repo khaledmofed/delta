@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Insurers\CustomerErrors;
 use App\Insurers\Data\MotorQuoteInput;
 use App\Insurers\Data\Offer;
 use App\Insurers\InsurerManager;
@@ -12,16 +13,28 @@ use Illuminate\Support\Str;
 
 /**
  * Asks every enabled insurer for the product and stores normalised quotes.
- * One insurer failing never blocks the others.
+ * One insurer failing never blocks the others. Each insurer's result is saved as soon
+ * as it arrives, so the results page can show offers while other insurers are still working.
  */
 class QuoteEngine
 {
+    public const PENDING = 'pending';
+
     public function __construct(protected InsurerManager $insurers) {}
+
+    /** Insurer codes that will be asked for this product, each marked pending. */
+    public function pendingResults(string $product): array
+    {
+        return array_map(fn () => ['status' => self::PENDING], $this->insurers->forProduct($product));
+    }
 
     public function run(QuoteRequest $qr, MotorQuoteInput $input): QuoteRequest
     {
-        $results = [];
-        foreach ($this->insurers->forProduct($qr->product) as $code => $adapter) {
+        $adapters = $this->insurers->forProduct($qr->product);
+        $results = ($qr->insurer_results ?: []) + array_map(fn () => ['status' => self::PENDING], $adapters);
+        $qr->forceFill(['status' => 'QUOTING', 'insurer_results' => $results])->save();
+
+        foreach ($adapters as $code => $adapter) {
             $requestId = (string) Str::uuid();
             $start = microtime(true);
             try {
@@ -29,26 +42,41 @@ class QuoteEngine
                 foreach ($res->offers as $offer) {
                     $this->store($qr, $offer);
                 }
-                $results[$code] = [
+                $result = [
                     'status' => $res->ok ? 'success' : 'error',
                     'offers' => count($res->offers),
                     'error_code' => $res->errorCode,
                     'error' => $res->errorMessage,
+                    'message' => $res->ok ? null : CustomerErrors::quote($code, $res->errorCode),
                     'request_id' => $requestId,
                 ];
             } catch (\Throwable $e) {
                 Log::error("Quote failed for {$code}", ['qr' => $qr->reference, 'e' => $e->getMessage()]);
-                $results[$code] = ['status' => 'exception', 'offers' => 0, 'error' => $e->getMessage(), 'request_id' => $requestId];
+                $result = ['status' => 'exception', 'offers' => 0, 'error' => $e->getMessage(), 'message' => CustomerErrors::GENERIC, 'request_id' => $requestId];
             }
-            $results[$code]['ms'] = (int) round((microtime(true) - $start) * 1000);
+            $result['ms'] = (int) round((microtime(true) - $start) * 1000);
+            $results[$code] = $result;
+            $qr->forceFill(['insurer_results' => $results])->save();
         }
 
+        $qr->forceFill(['status' => $qr->quotes()->exists() ? 'QUOTES_RECEIVED' : 'NO_QUOTES'])->save();
+
+        return $qr->fresh('quotes');
+    }
+
+    /** Called when the quoting job itself fails: close any insurer still pending so the page stops waiting. */
+    public function abandon(QuoteRequest $qr, string $reason): void
+    {
+        $results = $qr->insurer_results ?: [];
+        foreach ($results as $code => $r) {
+            if (($r['status'] ?? null) === self::PENDING) {
+                $results[$code] = ['status' => 'exception', 'offers' => 0, 'error' => $reason, 'message' => CustomerErrors::TIMEOUT];
+            }
+        }
         $qr->forceFill([
             'insurer_results' => $results,
             'status' => $qr->quotes()->exists() ? 'QUOTES_RECEIVED' : 'NO_QUOTES',
         ])->save();
-
-        return $qr->fresh('quotes');
     }
 
     protected function store(QuoteRequest $qr, Offer $o): Quote

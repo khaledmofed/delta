@@ -74,13 +74,14 @@ Last updated: 10-Nov-2026.
   - Dates are `dd/MM/yyyy`.
   - DIN code lists are in `database/data/din-codes.json`, seeded into the `insurer_codes` table.
   - Document codes: 103 / 105 = EID front / back, 101 / 102 = Mulkiya front / back, 106 / 121 = licence front / back, 107 = Bank LPO.
-- **Status as of 10-Nov-2026:**
+- **Status as of 10-Nov-2026 (evening):**
   - ✅ Auth works.
-  - ❌ GenerateQuote always returns **8013 "Civil id has been expired"**. This happens even with a real Emirates ID valid until 2028. Request ID for tracing: `0d6ac3cc-4601-4dcf-8d92-becb974cbddb`.
-    - We sent DIN the payload and asked them to check.
-    - Our test used 1×1 placeholder images for the documents. DIN may read the EID expiry from the image itself.
+  - ✅ GenerateQuote now answers **8006 "Quotation Created Successfully"** (earlier the same day it always returned 8013 "Civil id has been expired", request ID `0d6ac3cc-4601-4dcf-8d92-becb974cbddb`).
+    - For a comprehensive request on a 2023 Nissan Altima it returned **only product 1521 Third Party** (AED 750 + VAT). Ask DIN why no comprehensive product is offered in UAT.
+  - ❌ ChooseScheme returns **8112 "Unable to process request Commission code not found"** for product 1521 (request ID `b975e1d6-5ce1-41eb-a625-f7f39417d9ec`). This is DIN-side setup for the `DELTA_API` broker account. Payment cannot be tested until DIN fixes it.
   - The sample chassis given in the DIN spec returns 8010, because that car already has an active policy (use a real customer vehicle to test).
   - **Still to ask DIN:**
+    - Commission code setup (8112) and why only Third Party is offered
     - Token TTL
     - Payment return URL and webhook (none documented)
     - Test payment card
@@ -138,16 +139,22 @@ Last updated: 10-Nov-2026.
 
 ## 5. Next steps (in order)
 
-1. **Local run.** `composer install`, `.env` (sqlite locally), `php artisan migrate --seed`, `php artisan test`. Fix any failures.
-2. `php artisan insurers:ping din` should return OK. Then run `insurers:quote-test din` with real data once DIN fixes 8013.
-3. **Customer website in Blade.** Convert the prototype pages from `delta-website` into Blade layouts and partials, and copy the assets into `public/`.
-4. **Motor journey controllers.**
-   - Form Requests mirroring the wizard validation and eligibility rules.
-   - Document upload to the private disk.
-   - `QuoteEngine` run as a queued job, with a results page that polls.
-   - Checkout through `adapter->checkout()`, then redirect to the insurer `paymentUrl`.
-   - `PaymentReturnController` plus a scheduled poll calling `policyStatus()` to confirm the policy. **Never trust the return URL.**
-   - Policy PDF download, then email.
+1. ✅ **Local run.** Done 10-Nov-2026: all tests pass, `insurers:ping din` OK.
+2. ✅ **Customer website in Blade.** Public pages and the motor journey (`resources/views/site`, layout `layouts/site`). Output of the public pages was verified identical to the prototype HTML.
+3. ✅ **Motor journey** (done 10-Nov-2026, covered by `tests/Feature/MotorJourneyTest`):
+   - `MotorQuoteRequest`: same validation and DIN eligibility rules as `motor-quote.js`; codes checked against `insurer_codes`.
+   - Documents on the private `local` disk (`storage/app/private/quote-requests/{ref}`), `documents` rows with the DIN code.
+   - `RunQuoteEngine` job; `QuoteEngine` saves each insurer's result as it arrives; the results page polls `/motor-quote/{ref}/status`.
+   - Insurer errors are shown with `CustomerErrors` / `DinErrors` text, never the raw insurer message; other insurers stay visible.
+   - Select offer → `Order` → checkout → `adapter->checkout()` → redirect to the insurer `paymentUrl`.
+   - Payment return + `orders:poll-policies` (every 5 min) call `policyStatus()`. The return URL is never trusted; only `paymentStatus = F` fails a payment.
+   - Quote requests and orders are tied to the browser session (`App\Support\JourneyAccess`) until customer accounts exist.
+   - `SITE_DEMO` (on by default only when `APP_ENV=local`): demo panel, prefilled wizard, "Use sample files" (1×1 placeholder sent to the insurer). Never enable in production.
+4. **Still open in the journey:**
+   - Payment end to end on DIN UAT (blocked by 8112; then a test card is needed).
+   - Policy PDF download, then email (policy documents are already stored on the private disk when DIN returns them).
+   - Vehicle lookup by chassis (insurer EDATA): the "Find vehicle" button only guesses in demo mode.
+   - AWNIC needs `insurer_codes.meta.din` mappings and make/model codes before it can quote.
 5. **Admin panel:** orders, quotes, `api_logs` viewer, insurers on/off, leads (owner, source, next action).
 6. **Lead forms** for the non-digital products.
 7. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.

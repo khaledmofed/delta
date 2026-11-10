@@ -1,0 +1,10 @@
+{{-- Order summary card (orderAside() in the prototype checkout.js). Needs $order, $quote, $covers. --}}
+@use('App\Support\MotorPresenter', 'P')
+@php($ins = P::insurer($order->insurer))
+<div class="d-card d-card--glow"><div class="d-flex gap-3 align-items-center mb-15">@include('partials.motor.logo', ['ins' => $ins, 'size' => 'lg'])<div><b style="color:var(--ink);font-size:17px;display:block">{{ $quote->plan_name }}</b><small class="d-muted-2">{{ $ins['name'] }}</small></div></div>
+<div class="d-kv"><span>Vehicle</span><b>{{ trim(($order->quoteRequest->input['year'] ?? '').' '.($order->quoteRequest->input['make'] ?? '').' '.($order->quoteRequest->input['model'] ?? '')) }}</b></div><div class="d-kv"><span>Cover</span><b>{{ $quote->cover_type === 'comprehensive' ? 'Comprehensive' : 'Third party' }}{{ $quote->repair_type ? ' · '.($quote->repair_type === 'agency' ? 'Agency' : 'Garage') : '' }}</b></div>
+@if ($quote->cover_type === 'comprehensive')<div class="d-kv"><span>Deductible</span><b>{{ $quote->deductible !== null ? P::money0($quote->deductible) : 'Confirmed by the insurer' }}</b></div>@endif
+<div class="d-divider" style="margin:14px 0"></div><div class="d-kv"><span>Premium</span><b>{{ P::money($quote->premium) }}</b></div>@foreach ($covers as $c)<div class="d-kv"><span>+ {{ $c['name'] }}</span><b>{{ P::money($c['premium']) }}</b></div>@endforeach
+<div class="d-kv"><span>VAT 5%</span><b>{{ P::money($order->vat) }}</b></div><div class="d-kv total"><span>Total to pay</span><b>{{ P::money($order->total) }}</b></div>
+<p class="d-muted-2 mt-10 mb-0" style="font-size:12.5px">Order {{ $order->reference }} · Quote {{ $quote->id }} · valid until {{ P::date($quote->valid_until) }}@if (($quote->raw['indicative'] ?? false) && $order->state === 'QUOTE_SELECTED') · the insurer confirms the final price before payment @endif</p></div>
+<div class="d-note mt-3"><i class="fal fa-shield-check"></i><div>Your policy is issued by {{ $ins['name'] }}. Delta Insurance Services acts as your broker.</div></div>

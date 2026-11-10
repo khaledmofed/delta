@@ -32,7 +32,9 @@ return [
         'portal' => '/portal',
     ],
 
-    // The prototype's "Demo controls" panel. Shown only on local by default.
-    'demo_panel' => env('SITE_DEMO_PANEL', env('APP_ENV') === 'local'),
+    // Demo mode (local only by default): shows the prototype's "Demo controls" panel,
+    // prefills the motor wizard with a test customer and allows "Use sample files"
+    // (a placeholder image is sent instead of a real document). Never enable in production.
+    'demo' => (bool) env('SITE_DEMO', env('APP_ENV') === 'local'),
 
 ];
