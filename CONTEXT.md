@@ -158,18 +158,26 @@ Last updated: 10-Nov-2026.
    - Sections: Dashboard (real counts only), Providers (on/off switch + connection test), Quote Requests (each insurer's result, customer message and technical error), Orders (state machine + history + payments), Leads (status and owner), API Logs (filter by insurer, operation, result, request ID prefix).
    - The provider switch is `insurers.enabled`; `InsurerManager::forProduct()` skips switched-off insurers. An insurer not enabled in `.env` cannot be switched on from the panel.
    - Not built yet (prototype screens): products/capabilities, quotes list, policies, customers, documents review, payments, commissions, ERP, users & roles editor, audit log viewer, notifications, reports.
-5. **Still open in the journey:**
-   - Payment end to end on DIN UAT (blocked by 8112; then a test card is needed).
-   - Policy PDF download, then email (policy documents are already stored on the private disk when DIN returns them).
-   - Vehicle lookup by chassis (insurer EDATA): the "Find vehicle" button only guesses in demo mode.
-   - AWNIC needs `insurer_codes.meta.din` mappings and make/model codes before it can quote.
+5. ✅ **Journey emails + Track my order** (done 10-Nov-2026, covered by `tests/Feature/JourneyEmailsAndTrackingTest`):
+   - `App\Services\JourneyMailer` (queued Mailables in `app/Mail/Journey`, sent after commit; a mail error is logged and never stops the journey):
+     - Customer: `QuoteRequestReceived` (link to the offers), `OrderAwaitingPayment` (first payment start only, link to pay), `PolicyIssued` (download link for the policy document, or a link to the policy page if the insurer sent none).
+     - Team (`OPS_NOTIFY_EMAIL`): `TeamPolicyIssued`, `TeamOrderAlert` (insurer refused checkout, payment declined), with a link to the admin order.
+   - Email links are temporary signed URLs (`App\Support\JourneyLinks`: offers 7 days, orders 30 days) that open the session for that request/order on any device. Expired link → "Track my order" with the reference filled in.
+   - **Track my order** (`/track`, `TrackController`): order number + email or mobile (any format) opens the order (confirmation page: status, payment, policy, download). Same error for wrong details and unknown orders; 5 failed tries per IP and per order number → 15 min lock. "Sign in" / "My Account" / "Customer portal" links point here until customer accounts exist.
+   - Policy document download (`/motor/orders/{ref}/policy-document`): only for a session that opened the order; always sent as an attachment (insurer HTML is never rendered on our domain).
+   - `MotorOrders::refresh()` now takes a cache lock per order, so the scheduler and a polling page can never issue the same policy (or send its emails) twice.
 6. ✅ **Lead forms** (done 10-Nov-2026, covered by `tests/Feature/LeadFormsTest`):
    - The five product pages ("Request a quote") and the contact page post to `POST /leads` (`LeadController`, `LeadRequest`). Same markup; `delta.js` `initLeadForms` sends with fetch and shows the thank-you box with the real reference. Without JavaScript the form posts normally and the page shows a toast.
    - Saved in `leads` (`data`: message, contact_pref, emirate, source, page), status `new`; visible in Admin → Leads and on the dashboard.
    - Emails (queued Mailables): `LeadReceived` to the customer (reply-to Delta) and `NewLeadAlert` to `LEADS_NOTIFY_EMAIL` (reply-to the customer, link to the admin panel). Locally `MAIL_MAILER=log`. A mail failure never loses the lead.
    - Spam: hidden honeypot field (bots get a normal-looking answer, nothing is saved) + 5 requests per minute per IP.
    - **On the server:** set `MAIL_MAILER=smtp` and the SMTP credentials, and keep the queue worker running (emails are queued).
-7. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.
+7. **Still open in the journey:**
+   - Payment end to end on DIN UAT (blocked by 8112; then a test card is needed).
+   - Policy PDF download, then email (policy documents are already stored on the private disk when DIN returns them).
+   - Vehicle lookup by chassis (insurer EDATA): the "Find vehicle" button only guesses in demo mode.
+   - AWNIC needs `insurer_codes.meta.din` mappings and make/model codes before it can quote.
+8. **Later:** ERP sync, commissions, Arabic version (RTL), UAE PASS login, customer portal.
 
 ## 6. Hosting decisions
 

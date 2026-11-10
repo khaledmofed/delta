@@ -35,7 +35,7 @@ class MotorOrders
         'gcc' => '/\bgcc\b/i',
     ];
 
-    public function __construct(protected InsurerManager $insurers, protected MotorQuotes $quotes) {}
+    public function __construct(protected InsurerManager $insurers, protected MotorQuotes $quotes, protected JourneyMailer $mailer) {}
 
     public function select(Quote $quote): Order
     {
@@ -133,7 +133,9 @@ class MotorOrders
         }
 
         if (! $res->ok || ! $res->paymentUrl) {
-            $order->transition($order->state, 'Checkout failed: '.trim(($res->errorCode ?? '').' '.($res->errorMessage ?? 'no payment URL')));
+            $reason = trim(($res->errorCode ?? '').' '.($res->errorMessage ?? 'no payment URL'));
+            $order->transition($order->state, 'Checkout failed: '.$reason);
+            $this->mailer->failure($order, 'Insurer refused checkout', $reason);
 
             return $res->ok ? new CheckoutResult(false, errorCode: 'NO_PAYMENT_URL', errorMessage: 'The insurer did not return a payment page.') : $res;
         }
@@ -156,6 +158,9 @@ class MotorOrders
             'reference' => $res->insurerQuoteNo,
         ]);
         $order->transition('PAYMENT_PENDING', 'Sent to the insurer payment page');
+        if ($order->payments()->count() === 1) {   // first time only, not on every retry
+            $this->mailer->awaitingPayment($order);
+        }
 
         return $res;
     }
@@ -182,6 +187,26 @@ class MotorOrders
             return $order;
         }
 
+        // The scheduler and a polling page can check the same order at once: only one may move it,
+        // otherwise the policy (and its emails) would be processed twice.
+        $lock = Cache::lock("order:{$order->id}:refresh", 60);
+        if (! $lock->get()) {
+            return $order;
+        }
+        try {
+            $order->refresh();
+            if (! in_array($order->state, self::OPEN_STATES, true)) {
+                return $order;
+            }
+
+            return $this->applyInsurerStatus($order);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    protected function applyInsurerStatus(Order $order): Order
+    {
         try {
             $status = $this->insurers->get($order->insurer)->policyStatus($order->request_id, [
                 'awnic_quote_no' => $order->insurer_quote_no,
@@ -204,6 +229,7 @@ class MotorOrders
                 $this->issuePolicy($order, $status);
                 $order->transition('POLICY_ISSUED', 'Policy '.$status->policyNo.' issued');
             });
+            $this->mailer->policyIssued($order->fresh(['policy', 'customer', 'quote', 'quoteRequest']));
         } elseif ($status->paymentStatus === 'S') {
             if ($order->state === 'PAYMENT_PENDING') {
                 $payment?->update(['status' => 'success', 'raw' => $status->raw]);
@@ -214,6 +240,7 @@ class MotorOrders
             // Only an explicit "payment failed" from the insurer fails the payment.
             $payment?->update(['status' => 'failed', 'raw' => $status->raw]);
             $order->transition('PAYMENT_FAILED', 'Payment declined at the insurer'.($status->errorCode ? " ({$status->errorCode})" : ''));
+            $this->mailer->failure($order, 'Payment declined', trim(($status->errorCode ?? '').' '.($status->errorMessage ?? '')) ?: null);
         }
 
         return $order->fresh();

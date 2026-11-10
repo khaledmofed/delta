@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\Motor;
 use App\Http\Controllers\Motor\OrderController;
 use App\Http\Controllers\Motor\QuoteController;
 use App\Http\Controllers\PaymentReturnController;
@@ -70,6 +71,15 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         Route::get('/leads', [Admin\LeadController::class, 'index'])->middleware('can:leads.view')->name('leads');
         Route::patch('/leads/{lead}', [Admin\LeadController::class, 'update'])->middleware('can:leads.update')->name('leads.update');
     });
+});
+
+// "Track my order" (instead of customer accounts for now) + signed links from journey emails.
+Route::controller(Motor\TrackController::class)->group(function () {
+    Route::get('/track', 'show')->name('track');
+    Route::post('/track', 'lookup')->middleware('throttle:20,1')->name('track.lookup');
+    Route::get('/motor/open/order/{order}/{to}', 'openOrder')->whereIn('to', ['confirmation', 'payment', 'document'])->name('motor.order.open');
+    Route::get('/motor/open/quote/{quoteRequest}', 'openQuote')->name('motor.quote.open');
+    Route::get('/motor/orders/{order}/policy-document', 'document')->name('motor.policy.document');
 });
 
 // Insurers redirect the customer here after their hosted payment page.

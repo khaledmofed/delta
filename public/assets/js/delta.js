@@ -130,6 +130,8 @@
     // Without JavaScript the form posts normally and comes back here with the reference.
     var done = w.DELTA_LEAD_SENT;
     if (done) toast("Thank you — your request " + U.esc(done) + " has been received.", "ok");
+    // Server notices (e.g. an expired email link), shown as a toast on pages without their own message box.
+    if (w.DELTA_NOTICE && !d.querySelector(".d-note[data-notice]")) toast(U.esc(w.DELTA_NOTICE));
   }
 
   d.addEventListener("DOMContentLoaded", function () {

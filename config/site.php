@@ -25,13 +25,16 @@ return [
 
     // Lead forms (product pages + contact). New leads are emailed to this team inbox.
     'leads_email' => env('LEADS_NOTIFY_EMAIL', 'dis@deltains-brokers.com'),
+    // Internal alerts from the motor journey (new policy, payment failed, insurer refused checkout).
+    'ops_email' => env('OPS_NOTIFY_EMAIL', env('LEADS_NOTIFY_EMAIL', 'dis@deltains-brokers.com')),
     'emirates' => ['Sharjah', 'Dubai', 'Abu Dhabi', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'],
     'contact_prefs' => ['Phone call', 'WhatsApp', 'Email'],
 
     // Pages not converted to Blade yet (motor journey, accounts, demo screens).
     'links' => [
         'motor_quote' => '/motor-quote',
-        'login' => '/login',
+        // No customer accounts yet: "Sign in" / "My Account" / "Customer portal" open "Track my order".
+        'login' => '/track',
         'demo' => '/demo',
         'admin' => '/admin',
         'portal' => '/portal',

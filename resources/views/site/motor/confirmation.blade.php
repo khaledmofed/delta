@@ -10,6 +10,7 @@
     $in = $order->quoteRequest->input;
     $vehicle = trim(($in['year'] ?? '').' '.($in['make'] ?? '').' '.($in['model'] ?? ''));
     $reached = collect($order->history ?? [])->groupBy('state')->map(fn ($h) => $h->last()['at']);
+    $hasDocument = $order->state === 'POLICY_ISSUED' && $order->documents()->where('type', 'policy_schedule')->exists();
     $failed = $order->state === 'PAYMENT_FAILED';
     $issued = $order->state === 'POLICY_ISSUED';
     $open = in_array($order->state, MotorOrders::OPEN_STATES, true);
@@ -61,7 +62,7 @@
               </div>
               <div class="col-xl-5">
                 <div class="d-aside">
-                  <div id="policyBox">@if ($policy)<div class="d-policy-card"><img src="{{ asset('images/brand/delta-glyph-white.svg') }}" alt="" /><small>Policy number</small><b style="font-size:22px">{{ $policy->policy_no }}</b><small>Insurer</small><b>{{ $ins['name'] }} — {{ $quote->plan_name }}</b><div class="row"><div class="col-6"><small>Start</small><b>{{ P::date($policy->starts_on) }}</b></div><div class="col-6"><small>End</small><b>{{ P::date($policy->ends_on) }}</b></div></div><small>Vehicle</small><b style="margin:0">{{ $vehicle }}</b></div>@else<div class="d-card"><h4 style="color:var(--ink);font-size:16px">Your policy</h4><p class="d-muted mb-0">Your policy details will appear here once issued.</p></div>@endif</div>
+                  <div id="policyBox">@if ($policy)<div class="d-policy-card"><img src="{{ asset('images/brand/delta-glyph-white.svg') }}" alt="" /><small>Policy number</small><b style="font-size:22px">{{ $policy->policy_no }}</b><small>Insurer</small><b>{{ $ins['name'] }} — {{ $quote->plan_name }}</b><div class="row"><div class="col-6"><small>Start</small><b>{{ P::date($policy->starts_on) }}</b></div><div class="col-6"><small>End</small><b>{{ P::date($policy->ends_on) }}</b></div></div><small>Vehicle</small><b style="margin:0">{{ $vehicle }}</b></div>@if ($hasDocument)<div class="d-flex gap-2 mt-3 flex-wrap"><a class="d-btn d-btn--primary d-btn--sm" href="{{ route('motor.policy.document', $order) }}"><i class="far fa-file-arrow-down"></i> Policy schedule</a></div>@else<p class="d-muted-2 mt-10 mb-0" style="font-size:13px">The insurer’s policy documents will be sent to you separately.</p>@endif @else<div class="d-card"><h4 style="color:var(--ink);font-size:16px">Your policy</h4><p class="d-muted mb-0">Your policy details will appear here once issued.</p></div>@endif</div>
                   <div class="d-card mt-3" id="orderBox"><h4 style="color:var(--ink);font-size:16px;margin-bottom:12px">Order {{ $order->reference }}</h4><div class="d-kv"><span>Vehicle</span><b>{{ $vehicle }}</b></div><div class="d-kv"><span>{{ $issued ? 'Total paid' : 'Total' }}</span><b>{{ P::money($order->total) }}</b></div>@foreach ($order->payments()->orderBy('attempt')->get() as $p)<div class="d-kv"><span>Payment #{{ $p->attempt }} · {{ $ins['name'] }}</span><b style="color:{{ $p->status === 'success' ? 'var(--ok)' : ($p->status === 'failed' ? 'var(--bad)' : 'var(--steel)') }}">{{ $p->status }}</b></div>@endforeach</div>
                 </div>
               </div>

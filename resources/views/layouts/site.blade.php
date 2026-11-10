@@ -29,6 +29,9 @@
 @if (session('lead_reference'))
     <script>window.DELTA_LEAD_SENT = @json(session('lead_reference'));</script>
 @endif
+@if (session('notice'))
+    <script>window.DELTA_NOTICE = @json(session('notice'));</script>
+@endif
     <script src="{{ asset('assets/js/delta-data.js') }}"></script>
     <script src="{{ asset('assets/js/delta-store.js') }}"></script>
     <script src="{{ asset('assets/js/delta.js') }}"></script>

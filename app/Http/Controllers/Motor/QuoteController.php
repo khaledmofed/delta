@@ -8,6 +8,7 @@ use App\Insurers\InsurerManager;
 use App\Jobs\RunQuoteEngine;
 use App\Models\Quote;
 use App\Models\QuoteRequest;
+use App\Services\JourneyMailer;
 use App\Services\MotorOrders;
 use App\Services\MotorQuotes;
 use App\Support\JourneyAccess;
@@ -24,11 +25,12 @@ class QuoteController extends Controller
         ]);
     }
 
-    public function store(MotorQuoteRequest $request, MotorQuotes $quotes)
+    public function store(MotorQuoteRequest $request, MotorQuotes $quotes, JourneyMailer $mailer)
     {
         $qr = $quotes->create($request);
         JourneyAccess::grantQuote($qr);
         RunQuoteEngine::dispatch($qr->id);
+        $mailer->quoteReceived($qr);
 
         $url = route('motor.results', $qr);
 
