@@ -130,6 +130,12 @@ class JourneyEmailsAndTrackingTest extends TestCase
         $res = $this->get(route('motor.policy.document', $order))->assertOk();
         $this->assertStringContainsString('attachment', $res->headers->get('content-disposition'));
         $this->assertStringContainsString('Policy-p01202600055', $res->headers->get('content-disposition'));
+        // DIN names the file "policy_schedule.html" but sends a PDF (seen on UAT 11-Nov-2026): we use the real type.
+        $this->assertStringContainsString('.pdf', $res->headers->get('content-disposition'));
+        $this->assertSame('application/pdf', $res->headers->get('content-type'));
+        $doc = $order->documents()->first();
+        $this->assertStringEndsWith('.pdf', $doc->path);
+        $this->assertSame('application/pdf', $doc->mime);
         $this->assertSame('nosniff', $res->headers->get('x-content-type-options'));
         $this->assertStringStartsWith('%PDF-1.4 policy schedule', $res->streamedContent());
 
@@ -249,6 +255,14 @@ class JourneyEmailsAndTrackingTest extends TestCase
         $this->assertSame('POLICY_ISSUED', $order->fresh()->state);
         Mail::assertQueued(PolicyIssued::class, 1);
         Mail::assertQueued(TeamPolicyIssued::class, 1);
+    }
+
+    public function test_policy_document_type_comes_from_the_content_not_the_insurer_file_name(): void
+    {
+        $this->assertSame(['pdf', 'application/pdf'], MotorOrders::documentType("%PDF-1.7\n..."));
+        $this->assertSame(['html', 'text/html'], MotorOrders::documentType("  <!DOCTYPE html><html>"));
+        $this->assertSame(['png', 'image/png'], MotorOrders::documentType("\x89PNG\r\n"));
+        $this->assertSame(['bin', 'application/octet-stream'], MotorOrders::documentType('random bytes'));
     }
 
     public function test_a_mail_failure_never_blocks_the_journey(): void

@@ -275,13 +275,30 @@ class MotorOrders
         }
         $decoded = base64_decode($content, true);
         $bytes = $decoded !== false ? $decoded : $content;
-        $path = "orders/{$order->reference}/".Str::slug(pathinfo($name, PATHINFO_FILENAME)).'-'.Str::random(8).'.'.(pathinfo($name, PATHINFO_EXTENSION) ?: 'bin');
+        // The insurer's file name is not reliable (DIN calls a PDF "policy_schedule.html"): use the real content type.
+        [$ext, $mime] = self::documentType($bytes);
+        $base = Str::slug(pathinfo($name, PATHINFO_FILENAME)) ?: 'policy-schedule';
+        $path = "orders/{$order->reference}/{$base}-".Str::random(8).".{$ext}";
         Storage::disk(MotorQuotes::DISK)->put($path, $bytes);
         $order->documents()->create([
             'type' => 'policy_schedule', 'disk' => MotorQuotes::DISK, 'path' => $path,
-            'original_name' => $name, 'mime' => 'application/octet-stream', 'size' => strlen($bytes), 'status' => 'received',
+            'original_name' => "{$base}.{$ext}", 'mime' => $mime, 'size' => strlen($bytes), 'status' => 'received',
         ]);
 
-        return ['path' => $path];
+        return ['path' => $path, 'mime' => $mime];
+    }
+
+    /** @return array{0: string, 1: string} extension and MIME type detected from the file content */
+    public static function documentType(string $bytes): array
+    {
+        $head = ltrim(substr($bytes, 0, 512));
+
+        return match (true) {
+            str_starts_with($bytes, '%PDF') => ['pdf', 'application/pdf'],
+            str_starts_with($bytes, "\x89PNG") => ['png', 'image/png'],
+            str_starts_with($bytes, "\xFF\xD8\xFF") => ['jpg', 'image/jpeg'],
+            (bool) preg_match('/^<(\?xml|!doctype html|html|head|body|table|div)/i', $head) => ['html', 'text/html'],
+            default => ['bin', 'application/octet-stream'],
+        };
     }
 }

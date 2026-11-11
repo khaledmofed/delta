@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Insurers\Data\MotorQuoteInput;
 use App\Models\Order;
 use App\Models\QuoteRequest;
+use App\Services\MotorOrders;
 use App\Support\JourneyAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -115,10 +116,11 @@ class TrackController extends Controller
         $doc = $order->documents()->where('type', 'policy_schedule')->latest('id')->first();
         abort_unless($order->state === 'POLICY_ISSUED' && $doc && Storage::disk($doc->disk)->exists($doc->path), 404);
 
-        $ext = pathinfo($doc->original_name, PATHINFO_EXTENSION) ?: 'pdf';
+        // Type from the content itself (insurer file names are not reliable: DIN names its PDF ".html").
+        [$ext, $mime] = MotorOrders::documentType((string) Storage::disk($doc->disk)->get($doc->path));
         $name = 'Policy-'.Str::slug($order->policy?->policy_no ?: $order->reference).'.'.$ext;
 
-        // Always a download (never rendered on our domain): insurer content is not trusted HTML.
-        return Storage::disk($doc->disk)->download($doc->path, $name, ['X-Content-Type-Options' => 'nosniff']);
+        // Always a download (never rendered on our domain): insurer content is not trusted.
+        return Storage::disk($doc->disk)->download($doc->path, $name, ['Content-Type' => $mime, 'X-Content-Type-Options' => 'nosniff']);
     }
 }
