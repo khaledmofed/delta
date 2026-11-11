@@ -63,6 +63,7 @@
                         <div class="col-md-6"><label class="d-field"><span>Electric vehicle?</span><select class="d-select" name="ev"><option value="no">No</option><option value="yes">Yes</option></select></label></div>
                       </div>
                       <small class="d-hint d-block mt-10" id="vehHint"><i class="fal fa-circle-info"></i> In the live system these details and the insured value come from the insurer (EDATA) using the chassis number.</small>
+                      @include('partials.motor.old-car-note')
                     </div>
                     <div class="d-subhead">Registration &amp; plate</div>
                     <div class="row g-3">
@@ -85,6 +86,8 @@
                       <div class="col-md-6"><label class="d-opt"><input type="radio" name="coverType" value="comprehensive" checked /><span class="d-opt__box"><i class="fal fa-shield-check ico"></i><span><b>Comprehensive</b><small>Own damage, theft, fire + third-party liability.</small></span><span class="tick"><i class="fas fa-check"></i></span></span></label></div>
                       <div class="col-md-6"><label class="d-opt"><input type="radio" name="coverType" value="third_party" /><span class="d-opt__box"><i class="fal fa-car-burst ico"></i><span><b>Third Party Liability</b><small>Damage or injury to others. Minimum legal cover.</small></span><span class="tick"><i class="fas fa-check"></i></span></span></label></div>
                     </div>
+                    @include('partials.motor.old-car-note')
+                    <div class="d-elig" data-elig="4"></div>
                     <div id="repairWrap">
                       <div class="d-subhead">Repair preference</div>
                       <div class="d-seg"><label><input type="radio" name="repair" value="any" checked /><span>Show all</span></label><label><input type="radio" name="repair" value="agency" /><span>Agency repair</span></label><label><input type="radio" name="repair" value="garage" /><span>Garage repair</span></label></div>

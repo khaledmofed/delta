@@ -185,6 +185,35 @@ class MotorJourneyTest extends TestCase
             ->assertJsonFragment(['code' => '8016']);
     }
 
+    /** Vehicles older than 10 years: comprehensive is refused with an explanation, third party goes through. */
+    public function test_old_vehicles_can_only_get_third_party_online(): void
+    {
+        Queue::fake();
+        $old = (string) now()->subYears(12)->year;
+
+        $res = $this->submit($this->form(['year' => $old, 'coverType' => 'comprehensive']))->assertStatus(422);
+        $this->assertSame([['step' => 4, 'code' => '8017', 'message' => 'Comprehensive cover is not available online for vehicles older than 10 years. Please choose Third Party Liability.']], $res->json('eligibility'));
+        $this->assertSame(4, $res->json('step'));
+        $this->assertSame(0, QuoteRequest::count());
+
+        $ref = $this->submit($this->form(['year' => $old, 'coverType' => 'third_party', 'repair' => null]))->assertOk()->json('reference');
+        $qr = QuoteRequest::where('reference', $ref)->first();
+        $this->assertSame('third_party', $qr->input['cover_type']);
+        $this->assertSame((int) $old, $qr->input['year']);
+        Queue::assertPushed(RunQuoteEngine::class);
+
+        // Exactly 10 years old is still fine for comprehensive.
+        $this->submit($this->form(['year' => (string) now()->subYears(10)->year, 'coverType' => 'comprehensive']))->assertOk();
+    }
+
+    public function test_wizard_explains_the_old_vehicle_rule(): void
+    {
+        $this->get('/motor-quote')->assertOk()
+            ->assertSee('data-old-car-note', false)
+            ->assertSee('Comprehensive isn’t available online for this vehicle.')
+            ->assertSee('data-elig="4"', false);
+    }
+
     public function test_field_validation_and_documents(): void
     {
         Queue::fake();

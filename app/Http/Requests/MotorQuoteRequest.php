@@ -30,8 +30,13 @@ class MotorQuoteRequest extends FormRequest
     public const ELIGIBILITY = [
         'age_min' => [1, '8014'], 'age_max' => [1, '8015'], 'eid_expired' => [1, '8013'],
         'licence_expired' => [2, '8016'], 'licence_new' => [2, '8026'],
-        'vehicle_age' => [3, '8017'], 'non_gcc' => [3, '8024'], 'electric' => [3, '8023'],
+        'old_vehicle_comprehensive' => [4, '8017'], 'non_gcc' => [3, '8024'], 'electric' => [3, '8023'],
     ];
+
+    /** Vehicles older than this can only get Third Party Liability online. */
+    public const MAX_AGE_COMPREHENSIVE = 10;
+
+    public const OLD_VEHICLE_MESSAGE = 'Comprehensive cover is not available online for vehicles older than 10 years. Please choose Third Party Liability.';
 
     /** Traffic transaction types offered in the wizard. */
     public const TRAFFIC_TYPES = ['101', '102', '103', '104', '109'];
@@ -148,9 +153,9 @@ class MotorQuoteRequest extends FormRequest
         return [function (Validator $v) {
             $d = fn (string $k) => $this->dateInput($k);
             $today = CarbonImmutable::today();
-            $fail = function (string $rule) {
+            $fail = function (string $rule, ?string $message = null) {
                 [$step, $code] = self::ELIGIBILITY[$rule];
-                $this->eligibility[] = ['step' => $step, 'code' => $code, 'message' => DinErrors::forCustomer($code)];
+                $this->eligibility[] = ['step' => $step, 'code' => $code, 'message' => $message ?? DinErrors::forCustomer($code)];
             };
 
             if ($dob = $d('dob')) {
@@ -171,8 +176,10 @@ class MotorQuoteRequest extends FormRequest
             if (($from = $d('licenseFrom')) && $from->gt($today->subYear())) {
                 $fail('licence_new');
             }
-            if (is_numeric($this->input('year')) && $today->year - (int) $this->input('year') > 10) {
-                $fail('vehicle_age');
+            // Older vehicles are not refused: they can still get Third Party Liability, just not comprehensive.
+            if (is_numeric($this->input('year')) && $today->year - (int) $this->input('year') > self::MAX_AGE_COMPREHENSIVE
+                && $this->input('coverType') === 'comprehensive') {
+                $fail('old_vehicle_comprehensive', self::OLD_VEHICLE_MESSAGE);
             }
             if ($this->input('gccSpec') === 'no') {
                 $fail('non_gcc');

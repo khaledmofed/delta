@@ -3,6 +3,8 @@
 Handover notes for any developer or AI assistant continuing this project.
 Last updated: 10-Nov-2026.
 
+> **This repository is public.** Never put credentials, customer data, real vehicle data or personal contact details (names, emails, phone numbers, IPs) in it.
+
 ## 1. The business
 
 - **Client:** Delta Insurance Services L.L.C. An insurance **broker** in Sharjah, UAE, since 1990.

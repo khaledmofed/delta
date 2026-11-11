@@ -71,6 +71,8 @@ class AdminPanelTest extends TestCase
         $this->post(route('admin.logout'))->assertRedirect(route('admin.login'));
         $this->assertGuest();
 
+        // Frozen clock: on a slow run a second could pass and the message would say "59 seconds" (flaky before).
+        $this->freezeTime();
         for ($i = 0; $i < 5; $i++) {
             $this->post(route('admin.login.submit'), ['email' => 'admin@deltains-brokers.com', 'password' => 'nope']);
         }

@@ -66,6 +66,9 @@
     saveDraft(); renderSummary(); checkElig(3, false);
   }
 
+  var OLD_CAR_MSG = "Comprehensive cover is not available online for vehicles older than 10 years. Please choose Third Party Liability.";
+  function oldVehicle() { var y = Number(val("year")); return !!y && new Date().getFullYear() - y > 10; }
+
   /* ------------------------------------------------- insurer eligibility rules
      Mirrors the Dubai Insurance error codes so the customer is told before submitting. */
   function rules(n) {
@@ -78,8 +81,11 @@
       if (val("licenseTo") && new Date(val("licenseTo")) < new Date()) out.push(["8016", "Your driving licence has expired."]);
       if (val("licenseFrom") && years(val("licenseFrom")) < 1) out.push(["8026", "Your driving licence must have been issued at least 1 year ago."]);
     }
+    if (n === 4) {
+      // Vehicles over 10 years: comprehensive is not offered online, third party still is (see oldVehicle()).
+      if (oldVehicle() && val("coverType") === "comprehensive") out.push(["8017", OLD_CAR_MSG]);
+    }
     if (n === 3) {
-      if (val("year") && new Date().getFullYear() - Number(val("year")) > 10) out.push(["8017", "Vehicles older than 10 years cannot be insured online."]);
       if (val("gccSpec") === "no") out.push(["8024", "Non-GCC (imported) vehicles cannot be insured online."]);
       if (val("ev") === "yes") out.push(["8023", "Electric vehicles are not covered by our online insurer yet."]);
     }
@@ -238,6 +244,18 @@
     window.scrollTo({ top: form.getBoundingClientRect().top + window.scrollY - 170, behavior: "smooth" });
   }
   function toggles() {
+    // Older than 10 years: only Third Party Liability can be quoted online.
+    var old = oldVehicle(), comp = form.querySelector('input[name="coverType"][value="comprehensive"]'), tpl = form.querySelector('input[name="coverType"][value="third_party"]');
+    if (comp && tpl) {
+      comp.disabled = old;
+      comp.closest(".d-opt").style.opacity = old ? "0.5" : "";
+      if (old && comp.checked) { tpl.checked = true; checkElig(4, false); }
+    }
+    document.querySelectorAll("[data-old-car-note]").forEach(function (el) {
+      el.style.display = old ? "" : "none";
+      var yrs = old ? new Date().getFullYear() - Number(val("year")) : 0;
+      var t = el.querySelector("[data-old-car-years]"); if (t) t.textContent = yrs;
+    });
     document.getElementById("repairWrap").style.display = val("coverType") === "third_party" ? "none" : "";
     document.getElementById("bankWrap").style.display = financed() ? "" : "none";
   }
