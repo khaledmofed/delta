@@ -44,8 +44,32 @@
     f("model").innerHTML = opt(Object.keys(models), "Select model");
   }
 
-  /* Demo stand-in for the insurer's EDATA lookup by chassis number */
-  var WMI = { JT: "Toyota", JN: "Nissan", JM: "Mitsubishi", JH: "Honda", KM: "Hyundai", KN: "Kia", WD: "Mercedes-Benz", WB: "BMW", "1F": "Ford", "1G": "Chevrolet", "5Y": "Tesla", "7S": "Tesla" };
+  /* Demo stand-in for the insurer's EDATA lookup: decodes only what a VIN really encodes (ISO 3779).
+     - manufacturer: World Manufacturer Identifier, characters 1-3 (2-character fallback)
+     - model year: character 10 (codes repeat every 30 years; the most recent year not in the future wins)
+     The model is NOT in the VIN, so the customer always chooses it. Nothing is ever invented. */
+  var WMI3 = {
+    JTH: "Lexus", JTJ: "Lexus", "2T2": "Lexus", "58A": "Lexus",
+    JTD: "Toyota", JTE: "Toyota", JTM: "Toyota", JTN: "Toyota", JTK: "Toyota", "4T1": "Toyota", "5TD": "Toyota", "5TF": "Toyota", MR0: "Toyota",
+    JN1: "Nissan", JN8: "Nissan", "1N4": "Nissan", "1N6": "Nissan", "3N1": "Nissan", "5N1": "Nissan",
+    JA4: "Mitsubishi", JMB: "Mitsubishi", JMY: "Mitsubishi", ML3: "Mitsubishi",
+    JHM: "Honda", "1HG": "Honda", "2HG": "Honda", "5FN": "Honda",
+    KMH: "Hyundai", "5NP": "Hyundai", "5NM": "Hyundai", KNA: "Kia", KND: "Kia", "5XY": "Kia",
+    WDB: "Mercedes-Benz", WDD: "Mercedes-Benz", WDC: "Mercedes-Benz", W1K: "Mercedes-Benz", W1N: "Mercedes-Benz", "4JG": "Mercedes-Benz",
+    WBA: "BMW", WBS: "BMW", WBX: "BMW", "5UX": "BMW",
+    "1FA": "Ford", "1FT": "Ford", "1FM": "Ford", "3FA": "Ford", "1G1": "Chevrolet", "1GC": "Chevrolet", "1GN": "Chevrolet", "3GN": "Chevrolet",
+    "5YJ": "Tesla", "7SA": "Tesla", LRW: "Tesla",
+  };
+  var WMI2 = { JT: "Toyota", JN: "Nissan", JM: "Mitsubishi", JH: "Honda", KM: "Hyundai", KN: "Kia", WD: "Mercedes-Benz", WB: "BMW", "1F": "Ford", "1G": "Chevrolet", "5Y": "Tesla", "7S": "Tesla" };
+  var VIN_YEARS = "ABCDEFGHJKLMNPRSTVWXY123456789";   // 1980 … 2009, then the same codes again from 2010
+  function vinMake(vin) { var m = WMI3[vin.slice(0, 3)] || WMI2[vin.slice(0, 2)]; return m && D.VEHICLES[m] ? m : null; }
+  function vinYear(vin) {
+    var i = VIN_YEARS.indexOf(vin.charAt(9));
+    if (i < 0) return null;
+    var y = 1980 + i, max = new Date().getFullYear() + 1;
+    while (y + 30 <= max) y += 30;
+    return y;
+  }
   function lookupVin() {
     var vin = String(val("chassis")).trim().toUpperCase();
     var hint = document.getElementById("vehHint");
@@ -56,14 +80,16 @@
       f("make").focus();
       return;
     }
-    var make = WMI[vin.slice(0, 2)] || Object.keys(D.VEHICLES)[U.hash(vin) % Object.keys(D.VEHICLES).length];
-    var models = Object.keys(D.VEHICLES[make]);
-    var model = models[U.hash(vin + "m") % models.length];
-    var year = new Date().getFullYear() - (U.hash(vin + "y") % 8);
-    f("make").value = make; onMake(); f("model").value = model; f("year").value = String(year);
-    f("ev").value = make === "Tesla" ? "yes" : "no";
-    hint.innerHTML = '<i class="fas fa-circle-check" style="color:#00894f"></i> Vehicle found: <b style="color:var(--ink)">' + year + " " + make + " " + model + "</b> · estimated insured value " + U.money0(S.vehicleValue(make, model, year)) + ' <span class="d-muted-2">(demo — live data comes from the insurer’s EDATA lookup)</span>';
-    saveDraft(); renderSummary(); checkElig(3, false);
+    var make = vinMake(vin), year = vinYear(vin);
+    var yearListed = year && Array.prototype.some.call(f("year").options, function (o) { return o.value === String(year); });
+    if (make) { f("make").value = make; onMake(); f("ev").value = make === "Tesla" ? "yes" : "no"; }
+    if (yearListed) f("year").value = String(year);
+    var found = [yearListed ? year : "", make || ""].join(" ").trim();
+    hint.innerHTML = found
+      ? '<i class="fas fa-circle-check" style="color:#00894f"></i> From the chassis number: <b style="color:var(--ink)">' + U.esc(found) + "</b> — please choose the model" + (make && yearListed ? "" : " and check the details") + ' as shown on your Mulkiya. <span class="d-muted-2">(demo — live data comes from the insurer’s EDATA lookup)</span>'
+      : '<i class="fal fa-circle-info"></i> We couldn’t read the make or year from this chassis number. Please select them as shown on your Mulkiya.';
+    (make ? f("model") : f("make")).focus();
+    saveDraft(); renderSummary(); toggles(); checkElig(3, false);
   }
 
   var OLD_CAR_MSG = "Comprehensive cover is not available online for vehicles older than 10 years. Please choose Third Party Liability.";
@@ -221,7 +247,7 @@
         var t = new Date();
         Object.assign(o, { name: "Omar Al Mansoori", nameAr: "عمر المنصوري", email: "omar@example.com", mobile: "50 100 4000", dob: "1986-04-12", gender: "M", nationality: "102", emirate: "02",
           emiratesId: "784-1986-1234567-1", eidExpiry: isoDate(U.addDays(t, 600)), licenseNo: "1234567", licenseFrom: "2010-06-01", licenseTo: isoDate(U.addDays(t, 900)), ncdYears: "3",
-          trafficTranType: "103", chassis: "JTMHV05J604123456", tcfNumber: "10234567", plateSource: "3000", plateCode: "3", regNumber: "45120", regDt: isoDate(U.addDays(t, -340)) });
+          trafficTranType: "103", chassis: "JTMHV05J6P4123456", tcfNumber: "10234567", plateSource: "3000", plateCode: "3", regNumber: "45120", regDt: isoDate(U.addDays(t, -340)) });
       }
     }
     // Quick quote (home hero / motor page) always wins over a saved draft or the demo data.
