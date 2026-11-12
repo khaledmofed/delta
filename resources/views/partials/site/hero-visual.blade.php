@@ -4,10 +4,9 @@
      - quote bar: number of Live insurers that are also enabled for motor quoting (InsurerManager, admin switch included)
      - logo strip: every insurer in the table, Live ones and Coming soon ones (partials/site/insurer-strip) --}}
 @php
-    $stripInsurers = \App\Models\Insurer::forWebsite();
+    $stripInsurers ??= \App\Models\Insurer::forWebsite();
     $live = $stripInsurers->filter->isLive();
-    $quoting = array_keys(rescue(fn () => app(\App\Insurers\InsurerManager::class)->forProduct('motor'), [], false));
-    $enabled = count(array_intersect($quoting, $live->pluck('code')->all()));
+    $enabled = $liveInsurerCount ?? \App\Models\Insurer::liveQuotingCount($stripInsurers);
     $connected = $live->mapWithKeys(fn ($i) => [$i->code => ['name' => $i->name, 'short' => config("insurers.providers.{$i->code}.short")]]);
     $logo = fn (string $code, string $name) => '<span class="ins-logo ins-logo--sm" title="'.e($name).'"><img src="'.e(asset("images/insurers/{$code}.png")).'" alt="'.e($name).'" data-pid="'.e($code).'" onerror="DELTA.util &amp;&amp; DELTA.util.logoFallback(this)" /></span>';
 @endphp

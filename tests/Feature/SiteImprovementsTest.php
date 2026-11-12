@@ -77,6 +77,30 @@ class SiteImprovementsTest extends TestCase
         }
     }
 
+    public function test_every_insurer_count_on_the_site_follows_live_insurers(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('2 insurers compared')
+            ->assertSee('<b>2</b><span>Insurers compared online for motor</span>', false)
+            ->assertDontSee('3 insurers')->assertDontSee('<b>3</b>', false);
+        $this->get(route('services'))->assertOk()->assertSee('2 insurers compared')->assertDontSee('3 insurers');
+
+        Insurer::where('code', 'awnic')->update(['status' => Insurer::COMING_SOON]);   // from the admin panel
+        $this->get('/')->assertOk()->assertSee('1 insurer online')->assertSee('<b>1</b><span>Insurer compared online for motor</span>', false);
+        $this->get(route('services'))->assertOk()->assertSee('1 insurer online');
+
+        Insurer::where('code', 'din')->update(['enabled' => false]);   // nothing live can quote
+        $this->get('/')->assertOk()->assertSee('Advisor-assisted quotes')->assertDontSee('compared online for motor')->assertDontSee('0 insurer');
+        $this->get(route('services'))->assertOk()->assertSee('Advisor-assisted quotes');
+
+        // No fixed insurer count left in any public page source.
+        $files = collect(['site', 'partials', 'layouts'])->flatMap(fn ($d) => \Illuminate\Support\Facades\File::allFiles(resource_path("views/{$d}")));
+        $this->assertGreaterThan(10, $files->count());
+        foreach ($files as $f) {
+            $this->assertDoesNotMatchRegularExpression('/\b\d+\s+insurers?\b/i', $f->getContents(), $f->getRelativePathname());
+        }
+    }
+
     public function test_insurer_order_and_status_come_from_the_database(): void
     {
         Insurer::where('code', 'rak')->update(['sort' => 0]);

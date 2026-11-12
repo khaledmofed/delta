@@ -4,6 +4,11 @@
 @section('description', 'Delta Insurance Services L.L.C — trusted insurance broker in Sharjah since 1990. Motor, medical, home, travel, boat and pet insurance.')
 
 @section('content')
+@php
+    // One source for every insurer number on this page (quote bar, motor card, stats): Live + quoting.
+    $stripInsurers = \App\Models\Insurer::forWebsite();
+    $liveInsurerCount = \App\Models\Insurer::liveQuotingCount($stripInsurers);
+@endphp
 
       <!-- HERO -->
       <section class="hero">
@@ -73,7 +78,7 @@
                 </p>
                 <div class="steps">
                   <span><i class="fas fa-check"></i>Instant quotes</span
-                  ><span><i class="fas fa-check"></i>3 insurers compared</span
+                  ><span><i class="fas fa-check"></i>{{ \App\Models\Insurer::comparedLabel($liveInsurerCount) }}</span
                   ><span><i class="fas fa-check"></i>Policy issued online</span>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
@@ -274,7 +279,7 @@
             <div class="mock rv">
               <div class="hd">
                 <b>2024 Toyota Land Cruiser · Comprehensive</b
-                ><span class="d-badge d-badge--advisor">3 insurers</span>
+                ><span class="d-badge d-badge--advisor">Example</span>
               </div>
               <div class="row-o best">
                 <span class="ins-logo" title="Orient Insurance"
@@ -413,9 +418,11 @@
           <div class="stats-x mt-80">
             <div class="rv"><b>1990</b><span>Established in Sharjah</span></div>
             <div class="rv"><b>6</b><span>Personal insurance lines</span></div>
+@if ($liveInsurerCount > 0)
             <div class="rv">
-              <b>3</b><span>Insurers compared online for motor</span>
+              <b>{{ $liveInsurerCount }}</b><span>{{ $liveInsurerCount === 1 ? 'Insurer' : 'Insurers' }} compared online for motor</span>
             </div>
+@endif
             <div class="rv">
               <b>24/7</b><span>Online quotes and policy access</span>
             </div>

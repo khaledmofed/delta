@@ -303,7 +303,7 @@ button { font-family: inherit; }
 .feat-list p { font-size: 14.5px; margin: 0; color: var(--muted); line-height: 1.55; }
 
 /* stats */
-.stats-x { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stats-x { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }   /* 4 or 3 stats (insurer stat hidden when none is live) */
 .stats-x div { padding: 28px; border-radius: 22px; background: #fff; border: 1px solid var(--line); }
 .stats-x b { display: block; font-family: var(--font-head); font-size: 44px; font-weight: 800; letter-spacing: -0.04em; color: var(--navy); line-height: 1.1; }
 .stats-x span { color: var(--muted); font-size: 14.5px; }

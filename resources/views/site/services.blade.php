@@ -19,7 +19,7 @@
               <span class="d-badge d-badge--online" style="align-self:flex-start;margin-bottom:22px">Available online</span>
               <h3>Motor Insurance</h3>
               <p>Protect your vehicle with flexible insurance options. Compare offers from leading UAE insurers side by side and buy your policy online.</p>
-              <div class="steps"><span><i class="fas fa-check"></i>Instant quotes</span><span><i class="fas fa-check"></i>3 insurers compared</span><span><i class="fas fa-check"></i>Policy issued online</span></div>
+              <div class="steps"><span><i class="fas fa-check"></i>Instant quotes</span><span><i class="fas fa-check"></i>{{ \App\Models\Insurer::comparedLabel() }}</span><span><i class="fas fa-check"></i>Policy issued online</span></div>
               <div class="d-flex gap-2 flex-wrap"><span class="btn-x btn-mint"><span>Get a Motor Quote</span><span class="ar"><i class="far fa-arrow-right"></i></span></span></div>
             </div>
             <div class="art"><img src="{{ asset('images/cut/car.webp') }}" alt="Car" /></div>

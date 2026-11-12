@@ -57,6 +57,30 @@ class Insurer extends Model
         return mb_strtoupper(implode('', array_map(fn ($w) => mb_substr($w, 0, 1), array_slice($words, 0, 2))));
     }
 
+    /**
+     * Number of insurers the website may advertise for online motor quotes: marked Live in the table
+     * AND actually quoting (.env + admin switch, via InsurerManager). Used for every insurer count on the site.
+     */
+    public static function liveQuotingCount(?Collection $insurers = null): int
+    {
+        $live = ($insurers ?? static::forWebsite())->filter->isLive()->pluck('code')->all();
+        $quoting = array_keys(rescue(fn () => app(\App\Insurers\InsurerManager::class)->forProduct('motor'), [], false));
+
+        return count(array_intersect($quoting, $live));
+    }
+
+    /** "3 insurers compared" style label for service cards; no number when nothing is live. */
+    public static function comparedLabel(?int $count = null): string
+    {
+        $count ??= static::liveQuotingCount();
+
+        return match (true) {
+            $count >= 2 => "{$count} insurers compared",
+            $count === 1 => '1 insurer online',
+            default => 'Advisor-assisted quotes',
+        };
+    }
+
     /** Insurers for the website strip, in admin order. Empty when the table is not reachable (e.g. before migrations). */
     public static function forWebsite(): Collection
     {
