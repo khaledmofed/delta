@@ -76,7 +76,7 @@ class OrderController extends Controller
 
     public function confirmation(Order $order, MotorOrders $orders)
     {
-        $order = $orders->refresh(JourneyAccess::order($order), 10);
+        $order = $orders->refresh(JourneyAccess::viewing($order), 10);
 
         return view('site.motor.confirmation', ['order' => $order, 'quote' => $order->quote, 'policy' => $order->policy]);
     }

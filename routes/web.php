@@ -80,6 +80,7 @@ Route::prefix('/admin')->name('admin.')->group(function () {
 Route::controller(Motor\TrackController::class)->group(function () {
     Route::get('/track', 'show')->name('track');
     Route::post('/track', 'lookup')->middleware('throttle:20,1')->name('track.lookup');
+    Route::post('/track/exit', 'exit')->name('track.exit');
     Route::get('/motor/open/order/{order}/{to}', 'openOrder')->whereIn('to', ['confirmation', 'payment', 'document'])->name('motor.order.open');
     Route::get('/motor/open/quote/{quoteRequest}', 'openQuote')->name('motor.quote.open');
     Route::get('/motor/orders/{order}/policy-document', 'document')->name('motor.policy.document');

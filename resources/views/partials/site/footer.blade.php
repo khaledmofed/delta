@@ -7,7 +7,7 @@
             <div class="nl"><input type="email" placeholder="Email for renewal reminders" aria-label="Email" /><button type="button" onclick="DELTA.ui.toast('Subscribed (demo)','ok')">Subscribe</button></div>
           </div>
           <div><h5>Insurance</h5><ul>@foreach (config('site.services') as $key => $s)<li><a href="{{ route('products.'.$key) }}">{{ $s['name'] }}</a></li>@endforeach</ul></div>
-          <div><h5>Company</h5><ul><li><a href="{{ route('about') }}">About Us</a></li><li><a href="{{ route('services') }}">All services</a></li><li><a href="{{ url(config('site.links.motor_quote')) }}">Compare motor quotes</a></li><li><a href="{{ route('claims') }}">Claims &amp; Support</a></li><li><a href="{{ url(config('site.links.login')) }}">Customer portal</a></li><li><a href="{{ route('contact') }}">Contact</a></li></ul></div>
+          <div><h5>Company</h5><ul><li><a href="{{ route('about') }}">About Us</a></li><li><a href="{{ route('services') }}">All services</a></li><li><a href="{{ url(config('site.links.motor_quote')) }}">Compare motor quotes</a></li><li><a href="{{ route('claims') }}">Claims &amp; Support</a></li><li><a href="{{ route('track') }}">Track my order</a></li><li><a href="{{ route('contact') }}">Contact</a></li></ul></div>
           <div><h5>Get in touch</h5><ul>
             <li><a href="tel:{{ config('site.phone_href') }}"><i class="fal fa-phone"></i>{{ config('site.phone') }}</a></li>
             <li><a href="mailto:{{ config('site.email') }}"><i class="fal fa-envelope"></i>{{ config('site.email') }}</a></li>

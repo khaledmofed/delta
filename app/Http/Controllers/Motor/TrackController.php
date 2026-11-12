@@ -61,6 +61,14 @@ class TrackController extends Controller
         return redirect()->route('motor.confirmation', $order);
     }
 
+    /** Header "Exit": forget the orders opened in this browser. */
+    public function exit()
+    {
+        JourneyAccess::forgetOrders();
+
+        return redirect()->route('track')->with('notice', 'You have left your order on this device. Enter your order number to open it again.');
+    }
+
     /** Email (case-insensitive) or UAE mobile in any common format. */
     protected function matches(Order $order, string $contact): bool
     {

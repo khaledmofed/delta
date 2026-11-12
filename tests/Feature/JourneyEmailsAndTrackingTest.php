@@ -210,8 +210,66 @@ class JourneyEmailsAndTrackingTest extends TestCase
         $this->get(route('motor.confirmation', $order))->assertOk()->assertSee('You’re insured!')->assertSee('P/01/2026/000555')->assertSee('Policy schedule');
         $this->get(route('motor.policy.document', $order))->assertOk();
 
-        // "Sign in" / "My Account" in the header now lead here.
-        $this->get('/')->assertSee('href="'.url('/track').'"', false);
+        // The confirmation page asks the customer to keep the order number.
+        $this->get(route('motor.confirmation', $order))->assertSee('Save your order number: '.$order->reference)
+            ->assertSee('href="'.route('track', ['ref' => $order->reference]).'"', false);
+    }
+
+    public function test_header_reflects_the_orders_opened_in_this_session(): void
+    {
+        Mail::fake();
+        [$order] = $this->orderAwaitingPayment($this->issuedPaymentInfo());
+        $this->artisan('orders:poll-policies');
+        $second = $order->replicate();
+        $second->reference = 'ORD-2026-SECOND00';
+        $second->state = 'PAYMENT_PENDING';
+        $second->save();
+        $this->flushSession();
+        $this->flushHeaders();
+
+        // No order open: "Track my order" in the header, the top bar, the mobile menu and the footer; never "Sign in".
+        $home = $this->get('/')->assertOk()
+            ->assertSee('<a class="acc-link" href="'.route('track').'"><i class="fal fa-magnifying-glass-location"></i><span>Track my order</span></a>', false)
+            ->assertDontSee('Sign in')->assertDontSee('My Account')->assertDontSee('Customer portal')->assertDontSee('My order ·')
+            ->getContent();
+        $this->assertSame(4, substr_count($home, 'href="'.route('track').'"'));   // top bar, header, mobile menu, footer
+
+        // One order (opened from /track, an email link or after payment).
+        $this->post(route('track.lookup'), ['reference' => $order->reference, 'contact' => 'omar@example.com']);
+        $this->get('/')->assertOk()
+            ->assertSee('aria-label="My order · '.$order->reference.'"', false)
+            ->assertSeeInOrder(['View my order', 'Policy issued', 'Track another order', 'action="'.route('track.exit').'"', 'Exit'], false)
+            ->assertSee('View my order · '.$order->reference)   // mobile menu
+            ->assertSee('href="'.route('motor.confirmation', $order).'"', false)
+            ->assertDontSee('Your orders');
+
+        // Two orders in the same session: a list; the one opened last is current.
+        $this->post(route('track.lookup'), ['reference' => $second->reference, 'contact' => 'omar@example.com'])->assertRedirect(route('motor.confirmation', $second));
+        $this->get('/')->assertSee('aria-label="My order · '.$second->reference.'"', false)
+            ->assertSeeInOrder(['Your orders', $second->reference, 'Confirming payment', $order->reference, 'Policy issued', 'Track another order'])
+            ->assertDontSee('View my order');
+        $this->get(route('motor.confirmation', $order))->assertOk()->assertSee('aria-label="My order · '.$order->reference.'"', false);
+
+        // Exit: the orders are closed on this device and the header goes back to "Track my order".
+        $this->post(route('track.exit'))->assertRedirect(route('track'))->assertSessionHas('notice');
+        $this->get(route('motor.confirmation', $order))->assertNotFound();
+        $this->get(route('motor.confirmation', $second))->assertNotFound();
+        $this->get('/')->assertSee('<span>Track my order</span>', false)->assertDontSee('My order ·');
+    }
+
+    public function test_order_emails_carry_the_tracking_line(): void
+    {
+        Mail::fake();
+        [$order] = $this->orderAwaitingPayment($this->issuedPaymentInfo());
+        $this->artisan('orders:poll-policies');
+        $track = e(route('track', ['ref' => $order->reference]));
+
+        foreach ([Mail::queued(OrderAwaitingPayment::class)->first(), Mail::queued(PolicyIssued::class)->first()] as $mail) {
+            $html = $mail->render();
+            $this->assertStringContainsString('Your order number is <b style="color:#122a43">'.$order->reference.'</b>', $html);
+            $this->assertStringContainsString('<a href="'.$track.'" style="color:#256383;font-weight:bold">Track my order</a>', $html);
+            $mail->assertSeeInText('Track my order ('.$order->reference.' + your email or mobile): '.route('track', ['ref' => $order->reference]));
+        }
     }
 
     public function test_track_is_rate_limited(): void

@@ -13,5 +13,6 @@
     'Order' => $order->reference,
 ]])
 <p style="margin:0 0 20px">@if ($documentUrl)@include('emails.partials.button', ['url' => $documentUrl, 'label' => 'Download policy document'])@else@include('emails.partials.button', ['url' => $policyUrl, 'label' => 'View your policy'])@endif</p>
-<p style="margin:0;color:#7a8a99;font-size:13px">@if ($documentUrl)The download link works for {{ $days }} days. @else The insurer’s policy documents will be sent to you separately. @endif You can always see your policy on <a href="{{ $trackUrl }}" style="color:#256383">Track my order</a> with your order number and email.</p>
+@include('emails.partials.track')
+<p style="margin:0;color:#7a8a99;font-size:13px">@if ($documentUrl)The download link works for {{ $days }} days. @else The insurer’s policy documents will be sent to you separately. @endif</p>
 @endsection

@@ -167,6 +167,35 @@ button { font-family: inherit; }
 .burger { display: none; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-2); background: #fff; color: var(--ink); font-size: 17px; }
 @media (max-width: 1199px) { .nav { display: none; } .burger { display: inline-grid; place-items: center; } .hdr-cta { margin-left: auto; } }
 @media (max-width: 575px) { .hdr .container-x { height: 70px; } .hdr .logo img { height: 38px; } .hdr-cta .btn-x, .acc-link span { display: none; } }
+/* header "My order" menu (same look as .mega) */
+.acc-menu { position: relative; }
+.acc-menu > .acc-link { border: 0; background: none; font: inherit; font-weight: 500; cursor: pointer; }
+.acc-menu .acc-tx { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.acc-menu .acc-tx small { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+.acc-menu .acc-tx small .sep { display: none; }
+.acc-menu .acc-tx b { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
+/* room for "Track my order" / "My order · ORD-…" next to the menu (the old "Sign in" was shorter) */
+@media (min-width: 1200px) { .hdr .container-x { gap: 20px; } .nav { gap: 2px; } .nav > li > a { padding: 10px 12px; white-space: nowrap; } .acc-link { white-space: nowrap; } }
+@media (min-width: 1200px) and (max-width: 1279px) { .nav > li > a { padding: 10px 9px; } }
+@media (max-width: 1439px) { .acc-menu .acc-tx b { display: none; } .acc-menu .acc-tx small { font-size: inherit; color: inherit; } }
+@media (max-width: 575px) { .acc-menu .acc-tx { display: none; } }
+.acc-menu .acc-link > .fa-circle-user { position: relative; }
+.acc-menu .acc-link > .fa-circle-user::after { content: ""; position: absolute; right: -2px; top: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--mint-600); border: 2px solid #fff; }
+.acc-menu .acc-caret { font-size: 12px; color: var(--muted); transition: 0.2s; }
+.acc-menu.open .acc-caret { transform: rotate(180deg); }
+.acc-drop { position: absolute; top: calc(100% + 14px); right: 0; width: 300px; background: #fff; border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg); padding: 10px; display: grid; gap: 2px; opacity: 0; visibility: hidden; transform: translateY(8px); transition: 0.2s; z-index: 50; }
+.acc-menu.open .acc-drop { opacity: 1; visibility: visible; transform: none; }
+.acc-drop .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 12px 4px; }
+.acc-drop a, .acc-drop button { display: flex; gap: 12px; align-items: center; width: 100%; padding: 10px 12px; border-radius: 14px; border: 0; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.acc-drop a:hover, .acc-drop button:hover, .acc-drop a.on { background: var(--bg-soft); }
+.acc-drop .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--bg-tint); color: var(--steel); font-size: 16px; flex-shrink: 0; }
+.acc-drop a.on .ic { background: var(--navy); color: var(--mint); }
+.acc-drop b { display: block; font-weight: 600; font-size: 14.5px; }
+.acc-drop small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 1px; }
+.acc-drop form { margin: 4px 0 0; padding-top: 4px; border-top: 1px solid var(--line); }
+@media (max-width: 575px) { .acc-menu .acc-caret { display: none; } .acc-drop { right: -60px; width: min(300px, calc(100vw - 32px)); } }
+.mnav button.it { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); font: inherit; font-weight: 500; text-align: left; }
+.mnav button.it i { width: 22px; color: var(--steel); }
 .mnav { position: fixed; inset: 0; z-index: 2000; background: rgba(8, 24, 40, 0.45); opacity: 0; visibility: hidden; transition: 0.25s; }
 .mnav.open { opacity: 1; visibility: visible; }
 .mnav .panel { position: absolute; right: 0; top: 0; bottom: 0; width: min(380px, 90vw); background: #fff; padding: 22px; overflow-y: auto; transform: translateX(100%); transition: 0.3s; }

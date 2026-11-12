@@ -14,6 +14,6 @@ Download policy document ({{ $days }} days): {{ $documentUrl }}
 @else
 View your policy: {{ $policyUrl }}
 @endif
-Track my order: {{ $trackUrl }}
+Track my order ({{ $order->reference }} + your email or mobile): {{ $trackUrl }}
 
 Delta Insurance Services L.L.C · {{ config('site.phone') }} · {{ config('site.email') }}

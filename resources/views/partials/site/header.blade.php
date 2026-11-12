@@ -1,7 +1,7 @@
     <div class="topbar">
       <div class="container-x">
         <div class="l"><span><i class="fal fa-location-dot"></i>{{ config('site.location') }}</span><span class="hide-sm"><i class="fal fa-clock"></i>Insurance brokers since 1990</span></div>
-        <div class="r"><a href="tel:{{ config('site.phone_href') }}"><i class="fal fa-phone"></i>{{ config('site.phone') }}</a><a class="hide-sm" href="mailto:{{ config('site.email') }}"><i class="fal fa-envelope"></i>{{ config('site.email') }}</a></div>
+        <div class="r"><a class="hide-sm" href="{{ route('track') }}"><i class="fal fa-magnifying-glass-location"></i>Track my order</a><a href="tel:{{ config('site.phone_href') }}"><i class="fal fa-phone"></i>{{ config('site.phone') }}</a><a class="hide-sm" href="mailto:{{ config('site.email') }}"><i class="fal fa-envelope"></i>{{ config('site.email') }}</a></div>
       </div>
     </div>
     <header class="hdr" id="hdr">
@@ -18,7 +18,26 @@
           <li class="{{ $active === 'contact' ? 'active' : '' }}"><a href="{{ route('contact') }}">Contact</a></li>
         </ul>
         <div class="hdr-cta">
-          <a class="acc-link" href="{{ url(config('site.links.login')) }}"><i class="fal fa-circle-user"></i><span data-account-label>Sign in</span></a>
+{{-- No customer accounts: "Track my order", or the order(s) opened in this session (JourneyAccess, AppServiceProvider composer). --}}
+@if (! $myOrder)
+          <a class="acc-link" href="{{ route('track') }}"><i class="fal fa-magnifying-glass-location"></i><span>Track my order</span></a>
+@else
+          <div class="acc-menu" data-acc-menu>
+            <button class="acc-link" type="button" aria-haspopup="true" aria-expanded="false"><i class="fal fa-circle-user"></i><span class="acc-tx" aria-label="My order · {{ $myOrder->reference }}"><small>My order<i class="sep"> · </i></small><b>{{ $myOrder->reference }}</b></span><i class="far fa-angle-down acc-caret"></i></button>
+            <div class="acc-drop">
+@if ($myOrders->count() > 1)
+              <div class="lbl">Your orders</div>
+@foreach ($myOrders as $o)
+              <a class="ord {{ $loop->first ? 'on' : '' }}" href="{{ route('motor.confirmation', $o) }}"><span class="ic"><i class="fal fa-file-certificate"></i></span><span><b>{{ $o->reference }}</b><small>{{ $o->customerStatus() }}</small></span></a>
+@endforeach
+@else
+              <a href="{{ route('motor.confirmation', $myOrder) }}"><span class="ic"><i class="fal fa-file-certificate"></i></span><span><b>View my order</b><small>{{ $myOrder->customerStatus() }}</small></span></a>
+@endif
+              <a href="{{ route('track') }}"><span class="ic"><i class="fal fa-magnifying-glass-location"></i></span><span><b>Track another order</b></span></a>
+              <form method="post" action="{{ route('track.exit') }}">@csrf<button type="submit"><span class="ic"><i class="fal fa-arrow-right-from-bracket"></i></span><span><b>Exit</b><small>Close the order on this device</small></span></button></form>
+            </div>
+          </div>
+@endif
           <a class="btn-x btn-navy sm" href="{{ url(config('site.links.motor_quote')) }}" ><span>Get a Quote</span><span class="ar"><i class="far fa-arrow-right"></i></span></a>
           <button class="burger" type="button" data-open-nav aria-label="Open menu"><i class="far fa-bars-staggered"></i></button>
         </div>
@@ -36,6 +55,19 @@
         <a class="it" href="{{ route('claims') }}"><i class="fal fa-life-ring"></i>Claims &amp; Support</a>
         <a class="it" href="{{ route('about') }}"><i class="fal fa-building"></i>About Us</a>
         <a class="it" href="{{ route('contact') }}"><i class="fal fa-envelope"></i>Contact</a>
-        <a class="it" href="{{ url(config('site.links.login')) }}"><i class="fal fa-circle-user"></i>My Account</a>
+@if (! $myOrder)
+        <a class="it" href="{{ route('track') }}"><i class="fal fa-magnifying-glass-location"></i>Track my order</a>
+@else
+        <div class="grp">My order</div>
+@if ($myOrders->count() > 1)
+@foreach ($myOrders as $o)
+        <a class="it" href="{{ route('motor.confirmation', $o) }}"><i class="fal fa-file-certificate"></i><span>{{ $o->reference }}<small class="d-block" style="color:var(--muted);font-size:12.5px">{{ $o->customerStatus() }}</small></span></a>
+@endforeach
+@else
+        <a class="it" href="{{ route('motor.confirmation', $myOrder) }}"><i class="fal fa-file-certificate"></i><span>View my order · {{ $myOrder->reference }}<small class="d-block" style="color:var(--muted);font-size:12.5px">{{ $myOrder->customerStatus() }}</small></span></a>
+@endif
+        <a class="it" href="{{ route('track') }}"><i class="fal fa-magnifying-glass-location"></i>Track another order</a>
+        <form method="post" action="{{ route('track.exit') }}">@csrf<button class="it" type="submit"><i class="fal fa-arrow-right-from-bracket"></i>Exit</button></form>
+@endif
       </div>
     </div>

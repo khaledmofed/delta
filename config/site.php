@@ -50,8 +50,6 @@ return [
     // Pages not converted to Blade yet (motor journey, accounts, demo screens).
     'links' => [
         'motor_quote' => '/motor-quote',
-        // No customer accounts yet: "Sign in" / "My Account" / "Customer portal" open "Track my order".
-        'login' => '/track',
         'demo' => '/demo',
         'admin' => '/admin',
         'portal' => '/portal',

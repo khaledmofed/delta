@@ -26,8 +26,14 @@
     var nav = $(".mnav");
     $$("[data-open-nav]").forEach(function (b) { b.addEventListener("click", function () { nav && nav.classList.add("open"); }); });
     nav && nav.addEventListener("click", function (e) { if (e.target === nav || e.target.closest(".close")) nav.classList.remove("open"); });
-    var me = S.me();
-    $$("[data-account-label]").forEach(function (el) { el.textContent = me ? me.name.split(" ")[0] : "Sign in"; });
+    /* header "My order" menu: click to open, closes on outside click or Escape */
+    $$("[data-acc-menu]").forEach(function (m) {
+      var b = m.querySelector("button.acc-link");
+      function set(o) { m.classList.toggle("open", o); b.setAttribute("aria-expanded", o ? "true" : "false"); }
+      b.addEventListener("click", function (e) { e.stopPropagation(); set(!m.classList.contains("open")); });
+      document.addEventListener("click", function (e) { if (!m.contains(e.target)) set(false); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") set(false); });
+    });
     var hdr = $("#hdr"), top = $(".to-top");
     function onScroll() { var y = w.scrollY; hdr && hdr.classList.toggle("scrolled", y > 50); top && top.classList.toggle("show", y > 700); }
     w.addEventListener("scroll", onScroll, { passive: true }); onScroll();

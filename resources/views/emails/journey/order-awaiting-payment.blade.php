@@ -12,5 +12,6 @@
     'Total to pay' => 'AED '.number_format((float) $order->total, 2).' (incl. VAT)',
 ]])
 <p style="margin:0 0 20px">@include('emails.partials.button', ['url' => $payUrl, 'label' => 'Complete payment'])</p>
-<p style="margin:0;color:#7a8a99;font-size:13px">Already paid? You don’t need to do anything — we confirm every payment directly with the insurer. You can follow your order any time on <a href="{{ $trackUrl }}" style="color:#256383">Track my order</a> with your order number and email.</p>
+@include('emails.partials.track')
+<p style="margin:0;color:#7a8a99;font-size:13px">Already paid? You don’t need to do anything — we confirm every payment directly with the insurer.</p>
 @endsection

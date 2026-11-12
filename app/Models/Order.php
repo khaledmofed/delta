@@ -23,6 +23,19 @@ class Order extends Model
         'vat', 'total', 'commission_rate', 'request_id', 'insurer_quote_no', 'payment_url', 'policy_start', 'history',
     ];
 
+    /** Short status for the customer (header "My order" menu). */
+    public function customerStatus(): string
+    {
+        return match ($this->state) {
+            'POLICY_ISSUED' => 'Policy issued',
+            'PAYMENT_PENDING' => 'Confirming payment',
+            'PAYMENT_SUCCESS', 'POLICY_REQUESTED', 'INSURANCE_PROCESSING' => 'Policy being issued',
+            'QUOTE_SELECTED', 'CUSTOMER_DETAILS_PENDING', 'DOCUMENTS_PENDING' => 'Payment pending',
+            'PAYMENT_FAILED' => 'Payment not completed',
+            default => 'Please contact us',
+        };
+    }
+
     protected function casts(): array
     {
         return ['selected_covers' => 'array', 'history' => 'array', 'policy_start' => 'date'];
