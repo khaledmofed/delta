@@ -40,22 +40,57 @@ class SiteImprovementsTest extends TestCase
             ->assertSee('data-quick-quote method="get" action="'.route('motor.quote').'"', false)
             ->assertSee('Quotes from 2 insurers in minutes')
             ->assertSee('Get my quotes')
-            // logo strip: real insurers only
-            ->assertSeeInOrder(['<div class="insurers">', 'Offers from leading UAE insurers', '<span class="nm">Dubai Insurance</span>', '<span class="nm">Al Wathba Insurance</span>'], false)
+            // logo strip: live insurers first, then the partners coming soon (order from the insurers table)
+            ->assertSeeInOrder(['<div class="insurers insurers--grid">', 'Trusted by leading UAE insurers',
+                '<span class="nm">Dubai Insurance</span><span class="ins-tag ins-tag--live">Live</span>',
+                '<span class="nm">Al Wathba Insurance</span><span class="ins-tag ins-tag--live">Live</span>',
+                '<span class="nm">Sukoon Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>',
+                '<span class="nm">RAK Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>'], false)
             ->assertDontSee('demo — to be confirmed')
-            ->assertDontSee('<span class="nm">Sukoon Insurance</span>', false)
             ->assertDontSee('Get your motor insurance quote');   // the hero form card is gone
     }
 
     public function test_quote_bar_counts_only_enabled_insurers(): void
     {
-        Insurer::create(['code' => 'awnic', 'name' => 'Al Wathba Insurance', 'enabled' => false]);   // switched off in the admin panel
+        Insurer::where('code', 'awnic')->update(['enabled' => false]);   // switched off in the admin panel
         $this->get('/')->assertOk()
             ->assertSee('Quotes from 1 insurer in minutes')
             ->assertSee('<span class="nm">Al Wathba Insurance</span>', false);   // still a partner in the strip
 
-        Insurer::create(['code' => 'din', 'name' => 'Dubai Insurance', 'enabled' => false]);
+        Insurer::where('code', 'din')->update(['enabled' => false]);
         $this->get('/')->assertOk()->assertSee('Advisor-assisted quotes')->assertDontSee('Quotes from 0');
+    }
+
+    public function test_insurer_strip_lists_every_partner_with_live_and_coming_soon(): void
+    {
+        foreach (['/', route('products.motor')] as $url) {
+            $html = $this->get($url)->assertOk()->assertSee('Trusted by leading UAE insurers')->getContent();
+            foreach (['Sukoon Insurance', 'Orient Insurance', 'ADNIC', 'GIG Gulf', 'Al Buhaira National Insurance'] as $name) {
+                $this->assertStringContainsString('alt="'.$name.'"', $html, "{$name} logo on {$url}");   // logo file exists
+            }
+            foreach (['Methaq Takaful Insurance' => 'MET', 'Fidelity United' => 'FU', 'RAK Insurance' => 'RAK'] as $name => $mono) {
+                $this->assertStringContainsString('<span class="nm">'.$name.'</span>', $html);   // no logo: name + monogram
+                $this->assertStringContainsString('d-mono is-fallback" aria-hidden="true">'.$mono.'</span>', $html);
+            }
+            $this->assertSame(2, substr_count($html, 'ins-tag--live">Live'));
+            $this->assertSame(8, substr_count($html, 'ins-tag--soon">Coming soon'));
+        }
+    }
+
+    public function test_insurer_order_and_status_come_from_the_database(): void
+    {
+        Insurer::where('code', 'rak')->update(['sort' => 0]);
+        Insurer::where('code', 'sukoon')->update(['status' => Insurer::LIVE]);   // e.g. connected later: changed in the admin panel
+
+        $this->get('/')->assertOk()
+            ->assertSeeInOrder(['<span class="nm">RAK Insurance</span>', '<span class="nm">Dubai Insurance</span>'], false)
+            ->assertSee('<span class="nm">Sukoon Insurance</span><span class="ins-tag ins-tag--live">Live</span>', false)
+            ->assertSee('Quotes from 2 insurers in minutes');   // only live insurers that can actually quote are counted
+
+        Insurer::where('code', 'awnic')->update(['status' => Insurer::COMING_SOON]);
+        $this->get('/')->assertOk()
+            ->assertSee('Quotes from 1 insurer in minutes')
+            ->assertSee('<span class="nm">Al Wathba Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>', false);
     }
 
     public function test_results_offer_a_plan_details_link_and_the_page_shows_every_cover(): void

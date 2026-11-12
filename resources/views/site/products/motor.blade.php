@@ -20,6 +20,17 @@
             </div>
           </div>
         </section>
+@php
+    $stripInsurers = \App\Models\Insurer::forWebsite();
+    $liveNames = $stripInsurers->filter->isLive()->pluck('name')->all();
+    $soonNames = $stripInsurers->reject->isLive()->pluck('name')->all();
+    $list = fn (array $n) => count($n) > 1 ? implode(', ', array_slice($n, 0, -1)).' and '.end($n) : implode('', $n);
+@endphp
+        <section class="ins-sec">
+          <div class="container-x">
+@include('partials.site.insurer-strip')
+          </div>
+        </section>
         <section class="sec" id="how">
           <div class="container-x">
             <div class="sec-head"><div><span class="eyebrow">Choose your cover</span><h2 class="h-2">Comprehensive or third party?</h2></div><p class="lead">Not sure which you need? The comparison shows exactly what each offer includes before you buy.</p></div>
@@ -30,7 +41,7 @@
             <div class="steps-x mt-60">
               <div><span class="n">01</span><i class="fal fa-user"></i><h4>Your details</h4><p>Name, contact, age and driving history.</p></div>
               <div><span class="n">02</span><i class="fal fa-car"></i><h4>Your vehicle</h4><p>Make, model, year and value.</p></div>
-              <div><span class="n">03</span><i class="fal fa-scale-balanced"></i><h4>Compare offers</h4><p>Sukoon, Orient and ADNIC at once.</p></div>
+              <div><span class="n">03</span><i class="fal fa-scale-balanced"></i><h4>Compare offers</h4><p>Offers from our live insurers side by side.</p></div>
               <div><span class="n">04</span><i class="fal fa-file-arrow-up"></i><h4>Upload &amp; pay</h4><p>Emirates ID, licence, Mulkiya.</p></div>
               <div><span class="n">05</span><i class="fal fa-file-certificate"></i><h4>Policy issued</h4><p>Download from your account.</p></div>
             </div>
@@ -67,7 +78,7 @@
           <div class="container-x" style="max-width:920px">
             <div class="center-head" style="margin-bottom:36px"><span class="eyebrow">FAQ</span><h2 class="h-2">Motor insurance questions</h2></div>
             <div class="faq-x">
-              <details open><summary>Which insurers do you compare?</summary><p>In this first phase we connect to Sukoon Insurance, Orient Insurance and ADNIC. More insurers will be added over time.</p></details>
+              <details open><summary>Which insurers do you compare?</summary><p>@if ($liveNames)Online quotes currently come from {{ $list($liveNames) }}.@else Our advisors compare offers for you.@endif @if ($soonNames){{ $list($soonNames) }} are coming soon.@else More insurers will be added over time.@endif</p></details>
               <details><summary>How is the price calculated?</summary><p>Each insurer prices your policy using your vehicle, its value, your age, driving experience and claims history. Prices include 5% VAT.</p></details>
               <details><summary>When does my policy start?</summary><p>You choose the start date. Once payment is complete the insurer issues your policy and we send it by email and to your Delta account.</p></details>
               <details><summary>What if my car is older than 5 years?</summary><p>Agency repair is usually available for newer cars only. For older vehicles you will see garage repair and third-party options.</p></details>

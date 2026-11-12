@@ -1,11 +1,14 @@
 {{-- Home hero right column + motor quote bar + insurer strip — same markup as delta-website/index.html,
      with real data instead of the prototype's sample prices and placeholder insurers:
-     - floating card: the insurers Delta is connected to (config/insurers.php), "Live quotes" instead of a price
-     - quote bar: number of insurers currently enabled for motor (InsurerManager, admin switch included)
-     - logo strip: the same connected insurers; more appear here as they are added to config/insurers.php --}}
+     - floating card: the insurers marked Live in the insurers table, "Live quotes" instead of a price
+     - quote bar: number of Live insurers that are also enabled for motor quoting (InsurerManager, admin switch included)
+     - logo strip: every insurer in the table, Live ones and Coming soon ones (partials/site/insurer-strip) --}}
 @php
-    $connected = collect(config('insurers.providers'))->filter(fn ($p) => in_array('motor', $p['products'] ?? [], true));
-    $enabled = count(rescue(fn () => app(\App\Insurers\InsurerManager::class)->forProduct('motor'), [], false));
+    $stripInsurers = \App\Models\Insurer::forWebsite();
+    $live = $stripInsurers->filter->isLive();
+    $quoting = array_keys(rescue(fn () => app(\App\Insurers\InsurerManager::class)->forProduct('motor'), [], false));
+    $enabled = count(array_intersect($quoting, $live->pluck('code')->all()));
+    $connected = $live->mapWithKeys(fn ($i) => [$i->code => ['name' => $i->name, 'short' => config("insurers.providers.{$i->code}.short")]]);
     $logo = fn (string $code, string $name) => '<span class="ins-logo ins-logo--sm" title="'.e($name).'"><img src="'.e(asset("images/insurers/{$code}.png")).'" alt="'.e($name).'" data-pid="'.e($code).'" onerror="DELTA.util &amp;&amp; DELTA.util.logoFallback(this)" /></span>';
 @endphp
             <div class="hero-visual rv">
@@ -51,11 +54,4 @@
               </button>
             </form>
           </div>
-          <div class="insurers">
-            <span>Offers from leading UAE insurers</span>
-            <div class="list">
-@foreach ($connected as $code => $p)
-              <span class="ins">{!! $logo($code, $p['name']) !!}<span class="nm">{{ $p['name'] }}</span></span>
-@endforeach
-            </div>
-          </div>
+@include('partials.site.insurer-strip')

@@ -166,6 +166,29 @@ class AdminPanelTest extends TestCase
         $this->assertTrue(AuditLog::where('action', 'insurer.test_connection')->exists());
     }
 
+    public function test_website_status_and_order_are_changed_from_the_panel(): void
+    {
+        $this->actingAs($this->staff());
+        $this->get(route('admin.insurers'))->assertOk()->assertSee('Website logo strip')
+            ->assertSeeInOrder(['Dubai Insurance', 'Al Wathba Insurance', 'Sukoon Insurance', 'RAK Insurance'])
+            ->assertSee('Not connected yet');
+
+        $this->post(route('admin.insurers.display', 'orient'), ['status' => 'live', 'sort' => 1])
+            ->assertRedirect()->assertSessionHas('toast', fn ($t) => str_contains($t, 'Orient Insurance: Live') && str_contains($t, 'no online connection yet'));
+        $orient = Insurer::where('code', 'orient')->first();
+        $this->assertSame(['live', 1], [$orient->status, $orient->sort]);
+        $this->assertTrue(AuditLog::where('action', 'insurer.website_display')->where('subject_id', $orient->id)->exists());
+        $this->get('/')->assertSee('<span class="nm">Orient Insurance</span><span class="ins-tag ins-tag--live">Live</span>', false)
+            ->assertSee('Quotes from 2 insurers in minutes');   // shown as live, but it cannot quote yet
+
+        $this->post(route('admin.insurers.display', 'orient'), ['status' => 'hacked', 'sort' => 1])->assertSessionHasErrors('status');
+        $this->post(route('admin.insurers.display', 'nope'), ['status' => 'live', 'sort' => 1])->assertNotFound();
+
+        $this->actingAs($this->staff('readonly', 'ro@deltains-brokers.com'));
+        $this->get(route('admin.insurers'))->assertOk()->assertDontSee(route('admin.insurers.display', 'din'), false);
+        $this->post(route('admin.insurers.display', 'din'), ['status' => 'coming_soon', 'sort' => 1])->assertForbidden();
+    }
+
     public function test_leads_list_and_update(): void
     {
         $staff = $this->staff();

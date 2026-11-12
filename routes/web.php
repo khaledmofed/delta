@@ -68,6 +68,7 @@ Route::prefix('/admin')->name('admin.')->group(function () {
         Route::get('/insurers', [Admin\InsurerController::class, 'index'])->middleware('can:providers.view')->name('insurers');
         Route::middleware('can:providers.update')->group(function () {
             Route::post('/insurers/{code}/toggle', [Admin\InsurerController::class, 'toggle'])->name('insurers.toggle');
+            Route::post('/insurers/{code}/display', [Admin\InsurerController::class, 'display'])->name('insurers.display');
             Route::post('/insurers/{code}/test', [Admin\InsurerController::class, 'test'])->middleware('throttle:10,1')->name('insurers.test');
         });
         Route::get('/leads', [Admin\LeadController::class, 'index'])->middleware('can:leads.view')->name('leads');

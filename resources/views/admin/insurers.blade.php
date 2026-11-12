@@ -33,5 +33,21 @@
   </div>
 @endforeach
 </div>
+<div class="sec-h mt-4"><div><h2>Website logo strip</h2><p>“Trusted by leading UAE insurers” on the home and motor pages. <b>Live</b> shows the insurer in full colour with a Live tag; <b>Coming soon</b> shows it faded. Lower position = shown first. This does not switch quoting on or off.</p></div></div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Insurer</th><th>Website status</th><th class="num">Position</th><th>Online connection</th>@can('providers.update')<th></th>@endcan</tr></thead><tbody>
+@foreach ($website as $w)
+  <tr>
+    <td><div class="who">{{ UI::logo($w->code) }}<b>{{ $w->name }}</b></div></td>
+    @can('providers.update')
+    <td><select class="sel" name="status" form="ins-display-{{ $w->code }}" aria-label="Website status for {{ $w->name }}">@foreach (\App\Models\Insurer::STATUSES as $k => $v)<option value="{{ $k }}" @selected($w->status === $k)>{{ $v }}</option>@endforeach</select></td>
+    <td class="num"><input class="inp" type="number" name="sort" min="0" max="999" value="{{ $w->sort }}" form="ins-display-{{ $w->code }}" style="width:80px" aria-label="Position of {{ $w->name }}" /></td>
+    @else
+    <td>{{ \App\Models\Insurer::STATUSES[$w->status] ?? $w->status }}</td><td class="num">{{ $w->sort }}</td>
+    @endcan
+    <td>{{ isset($insurers[$w->code]) ? ($insurers[$w->code]['enabled'] ? 'Connected · quoting' : 'Connected · switched off') : 'Not connected yet' }}</td>
+    @can('providers.update')<td><form id="ins-display-{{ $w->code }}" method="post" action="{{ route('admin.insurers.display', $w->code) }}">@csrf<button class="btn-d sm">Save</button></form></td>@endcan
+  </tr>
+@endforeach
+</tbody></table></div>
 <div class="note-d mt-3"><i class="fal fa-list-timeline"></i><div>Switching an insurer on or off and connection tests are written to the audit log. Credentials stay in <span class="mono">.env</span> and are never shown here.</div></div>
 @endsection
