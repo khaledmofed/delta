@@ -18,15 +18,22 @@ Phase 1: Motor insurance sold online; other products use lead forms.
 ## التشغيل على السيرفر (Ubuntu 24.04)
 
 ```bash
-# 1) مرة واحدة كـ root — يثبّت nginx, PHP 8.3, MySQL, Redis, Supervisor ويطبع الـ IP
-sudo bash deploy/server-setup.sh uat.deltains-brokers.com
+# 1) clone أولاً (السكربت بيقرأ nginx.conf و supervisor-worker.conf من المشروع)
+#    مستخدم deploy + Deploy key للقراءة فقط، والمجلد /var/www/delta بملكية deploy:www-data
+git clone git@github.com:khaledmofed/delta.git /var/www/delta
 
-# 2) كمستخدم deploy
+# 2) مرة واحدة كـ root — يثبّت nginx, PHP 8.3, MySQL, Redis, Supervisor ويطبع الـ IP
+sudo bash /var/www/delta/deploy/server-setup.sh uat.deltains-brokers.com
+
+# 3) كمستخدم deploy
 cd /var/www/delta
-git clone <repo-url> .
 bash deploy/deploy.sh          # أول مرة ينشئ .env ويتوقف
 nano .env                      # DB_PASSWORD + بيانات الشركات (انسخها من .env.uat)
 bash deploy/deploy.sh          # ترحيل قاعدة البيانات + البذور + الكاش
+# أول مرة فقط، كـ root: صلاحية الكتابة لـ www-data وتشغيل الـ workers
+#   chgrp -R www-data storage bootstrap/cache && chmod -R ug+rwX storage bootstrap/cache
+#   supervisorctl update
+# على http (قبل HTTPS): APP_URL=http://<IP> و SESSION_SECURE_COOKIE=false، وإلا الفورمات بترجع 419
 
 # 3) HTTPS بعد ما الدومين يشير للسيرفر
 sudo certbot --nginx -d uat.deltains-brokers.com

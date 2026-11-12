@@ -44,7 +44,8 @@ nginx -t && systemctl reload nginx
 
 # Queue worker + scheduler
 cp "$(dirname "$0")/supervisor-worker.conf" /etc/supervisor/conf.d/delta-worker.conf
-( crontab -u deploy -l 2>/dev/null; echo "* * * * * cd ${APP_DIR} && php artisan schedule:run >> /dev/null 2>&1" ) | sort -u | crontab -u deploy -
+# "|| true": a new user has no crontab yet, and under set -e that would stop the script here.
+( crontab -u deploy -l 2>/dev/null || true; echo "* * * * * cd ${APP_DIR} && php artisan schedule:run >> /dev/null 2>&1" ) | sort -u | crontab -u deploy -
 supervisorctl reread || true
 
 echo
