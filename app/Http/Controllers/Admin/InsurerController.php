@@ -30,8 +30,8 @@ class InsurerController extends Controller
         $insurer->update($data);
         Audit::log('insurer.website_display', $insurer, $before, $insurer->only(['status', 'sort']));
 
-        $note = $insurer->isLive() && ! array_key_exists($code, config('insurers.providers', []))
-            ? ' Note: it has no online connection yet, so it is not counted in "Quotes from N insurers".'
+        $note = $insurer->isLive() && ! in_array($code, Insurer::quotingCodes(), true)
+            ? ' Note: it is not connected and enabled yet, so the website shows it as Coming soon until it is.'
             : '';
 
         return back()->with('toast', "{$insurer->name}: ".Insurer::STATUSES[$insurer->status]." · position {$insurer->sort}.{$note}");

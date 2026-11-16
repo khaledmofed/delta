@@ -33,9 +33,28 @@ class Insurer extends Model
         return $q->orderBy('sort')->orderBy('name');
     }
 
+    /** Whether this insurer can quote right now (*_ENABLED=true in .env and not switched off in the admin panel). Set by forWebsite(). */
+    public ?bool $quotingNow = null;
+
+    /** Status chosen in the admin panel (live | coming_soon). */
     public function isLive(): bool
     {
         return $this->status === self::LIVE;
+    }
+
+    /**
+     * What the website shows: "Live" only when the insurer is marked Live AND actually enabled.
+     * A Live insurer that is not enabled yet (e.g. waiting for IP whitelisting) shows "Coming soon".
+     */
+    public function isLiveNow(): bool
+    {
+        return $this->isLive() && ($this->quotingNow ?? in_array($this->code, static::quotingCodes(), true));
+    }
+
+    /** @return list<string> insurer codes that can quote motor now (InsurerManager: .env + admin switch) */
+    public static function quotingCodes(): array
+    {
+        return array_keys(rescue(fn () => app(\App\Insurers\InsurerManager::class)->forProduct('motor'), [], false));
     }
 
     /** Public URL of the logo file, or null when there is none yet (the site then shows the name with a monogram). */
@@ -63,10 +82,7 @@ class Insurer extends Model
      */
     public static function liveQuotingCount(?Collection $insurers = null): int
     {
-        $live = ($insurers ?? static::forWebsite())->filter->isLive()->pluck('code')->all();
-        $quoting = array_keys(rescue(fn () => app(\App\Insurers\InsurerManager::class)->forProduct('motor'), [], false));
-
-        return count(array_intersect($quoting, $live));
+        return ($insurers ?? static::forWebsite())->filter->isLiveNow()->count();
     }
 
     /** "3 insurers compared" style label for service cards; no number when nothing is live. */
@@ -84,6 +100,9 @@ class Insurer extends Model
     /** Insurers for the website strip, in admin order. Empty when the table is not reachable (e.g. before migrations). */
     public static function forWebsite(): Collection
     {
-        return rescue(fn () => static::query()->ordered()->get(), collect(), false);
+        $insurers = rescue(fn () => static::query()->ordered()->get(), collect(), false);
+        $quoting = static::quotingCodes();
+
+        return $insurers->each(fn (self $i) => $i->quotingNow = in_array($i->code, $quoting, true));
     }
 }

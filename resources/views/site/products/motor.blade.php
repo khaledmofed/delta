@@ -22,8 +22,8 @@
         </section>
 @php
     $stripInsurers = \App\Models\Insurer::forWebsite();
-    $liveNames = $stripInsurers->filter->isLive()->pluck('name')->all();
-    $soonNames = $stripInsurers->reject->isLive()->pluck('name')->all();
+    $liveNames = $stripInsurers->filter->isLiveNow()->pluck('name')->all();
+    $soonNames = $stripInsurers->reject->isLiveNow()->pluck('name')->all();
     $list = fn (array $n) => count($n) > 1 ? implode(', ', array_slice($n, 0, -1)).' and '.end($n) : implode('', $n);
 @endphp
         <section class="ins-sec">

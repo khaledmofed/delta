@@ -6,13 +6,13 @@
             <span>Trusted by leading UAE insurers</span>
             <div class="list">
 @foreach ($stripInsurers as $ins)
-              <span class="ins {{ $ins->isLive() ? 'is-live' : 'is-soon' }}">
+              <span class="ins {{ $ins->isLiveNow() ? 'is-live' : 'is-soon' }}">
 @if ($src = $ins->logoUrl())
                 <span class="ins-logo" title="{{ $ins->name }}"><img src="{{ $src }}" alt="{{ $ins->name }}" loading="lazy" /></span>
 @else
                 <span class="ins-logo d-mono is-fallback" aria-hidden="true">{{ $ins->initials() }}</span>
 @endif
-                <span class="tx"><span class="nm">{{ $ins->name }}</span>@if ($ins->isLive())<span class="ins-tag ins-tag--live">Live</span>@else<span class="ins-tag ins-tag--soon">Coming soon</span>@endif</span>
+                <span class="tx"><span class="nm">{{ $ins->name }}</span>@if ($ins->isLiveNow())<span class="ins-tag ins-tag--live">Live</span>@else<span class="ins-tag ins-tag--soon">Coming soon</span>@endif</span>
               </span>
 @endforeach
             </div>

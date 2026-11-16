@@ -174,12 +174,13 @@ class AdminPanelTest extends TestCase
             ->assertSee('Not connected yet');
 
         $this->post(route('admin.insurers.display', 'orient'), ['status' => 'live', 'sort' => 1])
-            ->assertRedirect()->assertSessionHas('toast', fn ($t) => str_contains($t, 'Orient Insurance: Live') && str_contains($t, 'no online connection yet'));
+            ->assertRedirect()->assertSessionHas('toast', fn ($t) => str_contains($t, 'Orient Insurance: Live') && str_contains($t, 'shows it as Coming soon'));
         $orient = Insurer::where('code', 'orient')->first();
         $this->assertSame(['live', 1], [$orient->status, $orient->sort]);
         $this->assertTrue(AuditLog::where('action', 'insurer.website_display')->where('subject_id', $orient->id)->exists());
-        $this->get('/')->assertSee('<span class="nm">Orient Insurance</span><span class="ins-tag ins-tag--live">Live</span>', false)
-            ->assertSee('Quotes from 2 insurers in minutes');   // shown as live, but it cannot quote yet
+        // Marked Live but not connected/enabled: the website keeps "Coming soon" and does not count it.
+        $this->get('/')->assertSee('<span class="nm">Orient Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>', false)
+            ->assertSee('Quotes from 2 insurers in minutes');
 
         $this->post(route('admin.insurers.display', 'orient'), ['status' => 'hacked', 'sort' => 1])->assertSessionHasErrors('status');
         $this->post(route('admin.insurers.display', 'nope'), ['status' => 'live', 'sort' => 1])->assertNotFound();

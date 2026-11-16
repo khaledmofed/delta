@@ -1,11 +1,11 @@
 {{-- Home hero right column + motor quote bar + insurer strip — same markup as delta-website/index.html,
      with real data instead of the prototype's sample prices and placeholder insurers:
-     - floating card: the insurers marked Live in the insurers table, "Live quotes" instead of a price
+     - floating card: insurers marked Live in the insurers table AND enabled (*_ENABLED + admin switch), "Live quotes" instead of a price
      - quote bar: number of Live insurers that are also enabled for motor quoting (InsurerManager, admin switch included)
      - logo strip: every insurer in the table, Live ones and Coming soon ones (partials/site/insurer-strip) --}}
 @php
     $stripInsurers ??= \App\Models\Insurer::forWebsite();
-    $live = $stripInsurers->filter->isLive();
+    $live = $stripInsurers->filter->isLiveNow();
     $enabled = $liveInsurerCount ?? \App\Models\Insurer::liveQuotingCount($stripInsurers);
     $connected = $live->mapWithKeys(fn ($i) => [$i->code => ['name' => $i->name, 'short' => config("insurers.providers.{$i->code}.short")]]);
     $logo = fn (string $code, string $name) => '<span class="ins-logo ins-logo--sm" title="'.e($name).'"><img src="'.e(asset("images/insurers/{$code}.png")).'" alt="'.e($name).'" data-pid="'.e($code).'" onerror="DELTA.util &amp;&amp; DELTA.util.logoFallback(this)" /></span>';

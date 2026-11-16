@@ -68,13 +68,30 @@ class SiteImprovementsTest extends TestCase
             foreach (['Sukoon Insurance', 'Orient Insurance', 'ADNIC', 'GIG Gulf', 'Al Buhaira National Insurance'] as $name) {
                 $this->assertStringContainsString('alt="'.$name.'"', $html, "{$name} logo on {$url}");   // logo file exists
             }
-            foreach (['Methaq Takaful Insurance' => 'MET', 'Fidelity United' => 'FU', 'RAK Insurance' => 'RAK'] as $name => $mono) {
+            foreach (['Methaq Takaful Insurance' => 'MET', 'Fidelity United' => 'FU', 'RAK Insurance' => 'RAK', 'QIC Insurance' => 'QIC'] as $name => $mono) {
                 $this->assertStringContainsString('<span class="nm">'.$name.'</span>', $html);   // no logo: name + monogram
                 $this->assertStringContainsString('d-mono is-fallback" aria-hidden="true">'.$mono.'</span>', $html);
             }
             $this->assertSame(2, substr_count($html, 'ins-tag--live">Live'));
-            $this->assertSame(8, substr_count($html, 'ins-tag--soon">Coming soon'));
+            $this->assertSame(9, substr_count($html, 'ins-tag--soon">Coming soon'));
         }
+        $this->get('/')->assertSeeInOrder(['<span class="nm">RAK Insurance</span>', '<span class="nm">QIC Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>'], false);
+    }
+
+    public function test_live_tag_only_for_insurers_enabled_in_env(): void
+    {
+        // Al Wathba is marked Live in the table, but AWNIC_ENABLED=false (e.g. waiting for IP whitelisting).
+        config(['insurers.providers.awnic.enabled' => false]);
+        $this->app->forgetInstance(\App\Insurers\InsurerManager::class);
+
+        $this->get('/')->assertOk()
+            ->assertSee('<span class="nm">Al Wathba Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>', false)
+            ->assertSee('<span class="nm">Dubai Insurance</span><span class="ins-tag ins-tag--live">Live</span>', false)
+            ->assertDontSee('Al Wathba<span class="p">Live quotes</span>', false)   // not in the floating card either
+            ->assertSee('Quotes from 1 insurer in minutes');
+        $this->get(route('products.motor'))->assertOk()
+            ->assertSee('Online quotes currently come from Dubai Insurance.')
+            ->assertSee('<span class="nm">Al Wathba Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>', false);
     }
 
     public function test_every_insurer_count_on_the_site_follows_live_insurers(): void
@@ -104,11 +121,11 @@ class SiteImprovementsTest extends TestCase
     public function test_insurer_order_and_status_come_from_the_database(): void
     {
         Insurer::where('code', 'rak')->update(['sort' => 0]);
-        Insurer::where('code', 'sukoon')->update(['status' => Insurer::LIVE]);   // e.g. connected later: changed in the admin panel
+        Insurer::where('code', 'sukoon')->update(['status' => Insurer::LIVE]);   // marked Live in the panel, but no adapter / not enabled
 
         $this->get('/')->assertOk()
             ->assertSeeInOrder(['<span class="nm">RAK Insurance</span>', '<span class="nm">Dubai Insurance</span>'], false)
-            ->assertSee('<span class="nm">Sukoon Insurance</span><span class="ins-tag ins-tag--live">Live</span>', false)
+            ->assertSee('<span class="nm">Sukoon Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>', false)
             ->assertSee('Quotes from 2 insurers in minutes');   // only live insurers that can actually quote are counted
 
         Insurer::where('code', 'awnic')->update(['status' => Insurer::COMING_SOON]);
