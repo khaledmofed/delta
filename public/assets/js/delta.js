@@ -21,11 +21,39 @@
   function mono(pid, size) { return U.logo(pid, size); }
 
 
+  /* Hero floating card: Coming soon rows move up one row at a time (2.5 s on screen + 0.6 s move), endless.
+     The track ends with copies of the first rows, so after the last step it jumps back to 0 invisibly.
+     Off when the user prefers reduced motion (the first rows just stay) and paused while the tab is hidden. */
+  function initTickers() {
+    var reduce = w.matchMedia ? w.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    $$("[data-fc-ticker]").forEach(function (box) {
+      var track = box.querySelector(".fc-track");
+      if (!track) return;
+      var originals = track.querySelectorAll(".row-mini:not([aria-hidden])").length;
+      var visible = parseInt(getComputedStyle(box).getPropertyValue("--rows"), 10) || 1;
+      if (originals <= visible) return;   // nothing to cycle
+      var i = 0, timer = null;
+      function rowH() { return track.firstElementChild.getBoundingClientRect().height || 47; }
+      function reset() { track.classList.remove("is-moving"); i = 0; track.style.transform = "translateY(0)"; }
+      function step() { i++; track.classList.add("is-moving"); track.style.transform = "translateY(" + -i * rowH() + "px)"; }
+      track.addEventListener("transitionend", function () { if (i >= originals) reset(); });
+      function start() { if (!timer && !(reduce && reduce.matches) && !document.hidden) timer = setInterval(step, 3100); }
+      function stop() { clearInterval(timer); timer = null; if (i >= originals) reset(); }
+      document.addEventListener("visibilitychange", function () { document.hidden ? stop() : start(); });
+      if (reduce) {
+        var onChange = function () { if (reduce.matches) { stop(); reset(); } else start(); };
+        reduce.addEventListener ? reduce.addEventListener("change", onChange) : reduce.addListener && reduce.addListener(onChange);
+      }
+      start();
+    });
+  }
+
   /* header, mobile nav, reveal, back-to-top */
   function initNav() {
     var nav = $(".mnav");
     $$("[data-open-nav]").forEach(function (b) { b.addEventListener("click", function () { nav && nav.classList.add("open"); }); });
     nav && nav.addEventListener("click", function (e) { if (e.target === nav || e.target.closest(".close")) nav.classList.remove("open"); });
+    initTickers();
     /* header "My order" menu: click to open, closes on outside click or Escape */
     $$("[data-acc-menu]").forEach(function (m) {
       var b = m.querySelector("button.acc-link");

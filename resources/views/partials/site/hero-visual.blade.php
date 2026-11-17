@@ -9,6 +9,17 @@
     $enabled = $liveInsurerCount ?? \App\Models\Insurer::liveQuotingCount($stripInsurers);
     $connected = $live->mapWithKeys(fn ($i) => [$i->code => ['name' => $i->name, 'short' => config("insurers.providers.{$i->code}.short")]]);
     $logo = fn (string $code, string $name) => '<span class="ins-logo ins-logo--sm" title="'.e($name).'"><img src="'.e(asset("images/insurers/{$code}.png")).'" alt="'.e($name).'" data-pid="'.e($code).'" onerror="DELTA.util &amp;&amp; DELTA.util.logoFallback(this)" /></span>';
+    // Floating card = 3 rows: Live insurers fixed on top, the remaining rows cycle through the Coming soon ones (table order).
+    $cardRows = 3;
+    $soon = $stripInsurers->reject->isLiveNow()->values();
+    $slots = min(max(0, $cardRows - $live->count()), $soon->count());
+    $soonRow = function ($i, bool $clone = false) {
+        $mark = ($src = $i->logoUrl())
+            ? '<span class="ins-logo ins-logo--sm" title="'.e($i->name).'"><img src="'.e($src).'" alt="" /></span>'
+            : '<span class="ins-logo ins-logo--sm d-mono is-fallback" aria-hidden="true">'.e($i->initials()).'</span>';
+
+        return '<div class="row-mini is-soon"'.($clone ? ' aria-hidden="true"' : '').'>'.$mark.'<span class="nm" title="'.e($i->name).'">'.e(config("insurers.providers.{$i->code}.short", $i->name)).'</span><span class="p">Coming soon</span></div>';
+    };
 @endphp
             <div class="hero-visual rv">
               <div class="photo">
@@ -29,6 +40,21 @@
 @foreach ($connected as $code => $p)
                 <div class="row-mini">{!! $logo($code, $p['name']) !!}{{ $p['short'] ?? $p['name'] }}<span class="p">Live quotes</span></div>
 @endforeach
+@if ($slots > 0)
+                {{-- Vertical ticker: shows $slots rows at a time; JS moves it up one row every 2.5 s (assets/js/delta.js). --}}
+                <div class="fc-ticker {{ $live->isEmpty() ? 'no-live' : '' }}" data-fc-ticker style="--rows: {{ $slots }}" aria-label="Insurers coming soon">
+                  <div class="fc-track">
+@foreach ($soon as $i)
+                    {!! $soonRow($i) !!}
+@endforeach
+@if ($soon->count() > $slots)
+@foreach ($soon->take($slots) as $i)
+                    {!! $soonRow($i, true) !!}
+@endforeach
+@endif
+                  </div>
+                </div>
+@endif
               </div>
             </div>
           </div>

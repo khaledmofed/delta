@@ -78,6 +78,30 @@ class SiteImprovementsTest extends TestCase
         $this->get('/')->assertSeeInOrder(['<span class="nm">RAK Insurance</span>', '<span class="nm">QIC Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>'], false);
     }
 
+    public function test_floating_card_has_three_rows_live_fixed_and_coming_soon_cycling(): void
+    {
+        $card = fn () => \Illuminate\Support\Str::between($this->get('/')->assertOk()->getContent(), '<div class="float-card a">', '<div class="quotebar');
+
+        // Both insurers live (test config): 2 fixed rows + a 1-row ticker over the coming-soon insurers, in table order.
+        $html = $card();
+        $this->assertSame(2, substr_count($html, '<span class="p">Live quotes</span>'));
+        $this->assertStringContainsString('data-fc-ticker style="--rows: 1"', $html);
+        $this->assertSame(9, substr_count($html, '<div class="row-mini is-soon">'));               // every coming-soon insurer once
+        $this->assertSame(1, substr_count($html, '<div class="row-mini is-soon" aria-hidden="true">'));   // + copy of the first for the loop
+        $this->assertStringContainsString('<span class="nm" title="Sukoon Insurance">Sukoon Insurance</span><span class="p">Coming soon</span>', $html);
+        $this->assertStringContainsString('d-mono is-fallback" aria-hidden="true">QIC</span>', $html);   // no logo: initials
+
+        // Al Wathba not enabled: 1 fixed row, 2-row ticker, Al Wathba (short name) cycles with the others.
+        config(['insurers.providers.awnic.enabled' => false]);
+        $this->app->forgetInstance(\App\Insurers\InsurerManager::class);
+        Insurer::where('code', 'rak')->update(['sort' => 0]);   // order comes from the table
+        $html = $card();
+        $this->assertSame(1, substr_count($html, '<span class="p">Live quotes</span>'));
+        $this->assertStringContainsString('data-fc-ticker style="--rows: 2"', $html);
+        $this->assertSame(2, substr_count($html, '<div class="row-mini is-soon" aria-hidden="true">'));
+        $this->assertMatchesRegularExpression('#<div class="row-mini is-soon">.*?title="RAK Insurance">RAK Insurance.*?title="Al Wathba Insurance">Al Wathba</span>#s', $html);
+    }
+
     public function test_live_tag_only_for_insurers_enabled_in_env(): void
     {
         // Al Wathba is marked Live in the table, but AWNIC_ENABLED=false (e.g. waiting for IP whitelisting).
