@@ -33,7 +33,7 @@ class SiteImprovementsTest extends TestCase
             ->assertSee('<span class="yr">35+</span>', false)
             ->assertSee('Get motor quotes')->assertSee('Speak to an advisor')
             // floating card: connected insurers, no prices
-            ->assertSeeInOrder(['<div class="float-card a">', 'Compare motor quotes', 'title="Dubai Insurance"', 'Dubai Insurance<span class="p">Live quotes</span>', 'title="Al Wathba Insurance"', 'Al Wathba<span class="p">Live quotes</span>'], false)
+            ->assertSeeInOrder(['<div class="float-card a">', 'Compare motor quotes', 'title="Dubai Insurance"', 'Dubai Insurance<span class="p ins-tag ins-tag--live">Live quotes</span>', 'title="Al Wathba Insurance"', 'Al Wathba<span class="p ins-tag ins-tag--live">Live quotes</span>'], false)
             ->assertDontSee('Motor quotes · 2024 Toyota Land Cruiser')   // old floating card title with sample prices
             // navy quote bar -> /motor-quote, with the number of enabled insurers
             ->assertSee('<div class="quotebar rv" id="quote">', false)
@@ -70,8 +70,8 @@ class SiteImprovementsTest extends TestCase
                 $this->assertStringContainsString('alt="'.$name.'"', $html, "{$name} logo on {$url}");
             }
             $this->assertStringNotContainsString('d-mono is-fallback', \Illuminate\Support\Str::between($html, 'insurers--grid', '</section>'));
-            $this->assertSame(2, substr_count($html, 'ins-tag--live">Live'));
-            $this->assertSame(9, substr_count($html, 'ins-tag--soon">Coming soon'));
+            $this->assertSame(2, substr_count($html, 'class="ins-tag ins-tag--live">Live</span>'));
+            $this->assertSame(9, substr_count($html, 'class="ins-tag ins-tag--soon">Coming soon</span>'));
         }
         $this->get('/')->assertSeeInOrder(['<span class="nm">RAK Insurance</span>', '<span class="nm">QIC Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>'], false);
 
@@ -88,11 +88,11 @@ class SiteImprovementsTest extends TestCase
 
         // Both insurers live (test config): 2 fixed rows + a 1-row ticker over the coming-soon insurers, in table order.
         $html = $card();
-        $this->assertSame(2, substr_count($html, '<span class="p">Live quotes</span>'));
+        $this->assertSame(2, substr_count($html, '<span class="p ins-tag ins-tag--live">Live quotes</span>'));
         $this->assertStringContainsString('data-fc-ticker style="--rows: 1; height: 47px; overflow: hidden"', $html);   // never grows
         $this->assertSame(9, substr_count($html, '<div class="row-mini is-soon">'));               // every coming-soon insurer once
         $this->assertSame(1, substr_count($html, '<div class="row-mini is-soon" aria-hidden="true">'));   // + copy of the first for the loop
-        $this->assertStringContainsString('<span class="nm" title="Sukoon Insurance">Sukoon Insurance</span><span class="p">Coming soon</span>', $html);
+        $this->assertStringContainsString('<span class="nm" title="Sukoon Insurance">Sukoon Insurance</span><span class="p ins-tag ins-tag--soon">Coming soon</span>', $html);
         $this->assertStringContainsString('src="'.asset('images/insurers/qic.png').'"', $html);   // logo in the card too
 
         // Al Wathba not enabled: 1 fixed row, 2-row ticker, Al Wathba (short name) cycles with the others.
@@ -100,7 +100,7 @@ class SiteImprovementsTest extends TestCase
         $this->app->forgetInstance(\App\Insurers\InsurerManager::class);
         Insurer::where('code', 'rak')->update(['sort' => 0]);   // order comes from the table
         $html = $card();
-        $this->assertSame(1, substr_count($html, '<span class="p">Live quotes</span>'));
+        $this->assertSame(1, substr_count($html, '<span class="p ins-tag ins-tag--live">Live quotes</span>'));
         $this->assertStringContainsString('data-fc-ticker style="--rows: 2; height: 94px; overflow: hidden"', $html);
         $this->assertSame(2, substr_count($html, '<div class="row-mini is-soon" aria-hidden="true">'));
         $this->assertMatchesRegularExpression('#<div class="row-mini is-soon">.*?title="RAK Insurance">RAK Insurance.*?title="Al Wathba Insurance">Al Wathba</span>#s', $html);
@@ -115,7 +115,7 @@ class SiteImprovementsTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('<span class="nm">Al Wathba Insurance</span><span class="ins-tag ins-tag--soon">Coming soon</span>', false)
             ->assertSee('<span class="nm">Dubai Insurance</span><span class="ins-tag ins-tag--live">Live</span>', false)
-            ->assertDontSee('Al Wathba<span class="p">Live quotes</span>', false)   // not in the floating card either
+            ->assertDontSee('Al Wathba<span class="p ins-tag ins-tag--live">Live quotes</span>', false)   // not in the floating card either
             ->assertSee('Quotes from 1 insurer in minutes');
         $this->get(route('products.motor'))->assertOk()
             ->assertSee('Online quotes currently come from Dubai Insurance.')

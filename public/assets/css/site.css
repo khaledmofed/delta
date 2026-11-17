@@ -231,7 +231,7 @@ button { font-family: inherit; }
 .float-card b { color: var(--ink); font-family: var(--font-head); }
 .float-card .row-mini { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
 .float-card .row-mini:first-of-type { border-top: 0; }
-.float-card .row-mini span.p { margin-left: auto; font-weight: 700; color: var(--ink); }
+.float-card .row-mini span.p { margin-left: auto; }   /* status badge (.ins-tag) pushed to the right */
 .float-card .yr { font-family: var(--font-head); font-size: 34px; font-weight: 800; color: var(--navy); letter-spacing: -0.04em; line-height: 1; }
 /* floating card: Coming soon ticker under the Live rows (rows have a fixed height so the ticker can move by whole rows) */
 .float-card .fc-ticker { --rh: 47px; height: calc(var(--rows, 2) * var(--rh)); overflow: hidden; position: relative; }
@@ -246,7 +246,6 @@ button { font-family: inherit; }
 .float-card .row-mini.is-soon .ins-logo { filter: grayscale(1); opacity: 0.55; }
 .float-card .row-mini.is-soon .d-mono.is-fallback { background: var(--steel); color: #fff; font-size: 10px; }
 .float-card .row-mini.is-soon .nm { color: var(--muted); }
-.float-card .row-mini.is-soon span.p { flex-shrink: 0; font-weight: 600; font-size: 12.5px; color: #9aa6b2; }
 @media (max-width: 1099px) { .float-card.a { left: 16px; } .float-card.b { right: 16px; } }
 @media (max-width: 575px) { .float-card.a { display: none; } }
 
@@ -572,10 +571,16 @@ button { font-family: inherit; }
 .insurers--grid .ins.is-soon { background: var(--bg-soft); }
 .insurers--grid .ins.is-soon .ins-logo { filter: grayscale(1); opacity: 0.55; }
 .insurers--grid .ins.is-soon .nm { color: #7b8897; }
-.ins-tag { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font); font-size: 11px; font-weight: 600; line-height: 1; padding: 4px 8px; border-radius: 30px; white-space: nowrap; letter-spacing: 0; }
-.ins-tag--live { background: var(--mint-50); color: #007a48; }
-.ins-tag--live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--mint-600); }
-.ins-tag--soon { background: var(--steel-100); color: var(--steel); }
+/* Insurer status badges — one style for the hero card and the logo strip.
+   Live: mint pill + pulsing dot (connection is live). Coming soon: amber pill + clock icon. */
+:root { --live-fg: #00894f; --soon-bg: #fff6e5; --soon-fg: #b26b00; }
+.ins-tag { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: var(--font); font-size: 12px; font-weight: 700; line-height: 1; padding: 5px 10px; border-radius: 30px; white-space: nowrap; letter-spacing: 0; }
+.ins-tag--live { background: var(--mint-50); color: var(--live-fg); }
+.ins-tag--live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mint-600); box-shadow: 0 0 0 0 rgba(0, 209, 124, 0.55); animation: ins-pulse 2s ease-out infinite; }
+.ins-tag--soon { background: var(--soon-bg); color: var(--soon-fg); }
+.ins-tag--soon::before { content: "\f017"; font-family: "Font Awesome 6 Pro"; font-weight: 400; font-size: 11px; line-height: 1; }
+@keyframes ins-pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 209, 124, 0.55); } 70% { box-shadow: 0 0 0 6px rgba(0, 209, 124, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 209, 124, 0); } }
+@media (prefers-reduced-motion: reduce) { .ins-tag--live::before { animation: none; } }
 @media (max-width: 1199px) { .insurers--grid .list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 991px) { .insurers--grid .list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 767px) { .insurers--grid .list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

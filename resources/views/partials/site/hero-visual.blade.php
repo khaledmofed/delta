@@ -18,7 +18,7 @@
             ? '<span class="ins-logo ins-logo--sm" title="'.e($i->name).'"><img src="'.e($src).'" alt="" /></span>'
             : '<span class="ins-logo ins-logo--sm d-mono is-fallback" aria-hidden="true">'.e($i->initials()).'</span>';
 
-        return '<div class="row-mini is-soon"'.($clone ? ' aria-hidden="true"' : '').'>'.$mark.'<span class="nm" title="'.e($i->name).'">'.e(config("insurers.providers.{$i->code}.short", $i->name)).'</span><span class="p">Coming soon</span></div>';
+        return '<div class="row-mini is-soon"'.($clone ? ' aria-hidden="true"' : '').'>'.$mark.'<span class="nm" title="'.e($i->name).'">'.e(config("insurers.providers.{$i->code}.short", $i->name)).'</span><span class="p ins-tag ins-tag--soon">Coming soon</span></div>';
     };
 @endphp
             <div class="hero-visual rv">
@@ -38,7 +38,7 @@
               <div class="float-card a">
                 <small style="margin-bottom: 6px">Compare motor quotes</small>
 @foreach ($connected as $code => $p)
-                <div class="row-mini">{!! $logo($code, $p['name']) !!}{{ $p['short'] ?? $p['name'] }}<span class="p">Live quotes</span></div>
+                <div class="row-mini">{!! $logo($code, $p['name']) !!}{{ $p['short'] ?? $p['name'] }}<span class="p ins-tag ins-tag--live">Live quotes</span></div>
 @endforeach
 @if ($slots > 0)
                 {{-- Vertical ticker: shows $slots rows at a time; JS moves it up one row every 2.5 s (assets/js/delta.js). --}}
