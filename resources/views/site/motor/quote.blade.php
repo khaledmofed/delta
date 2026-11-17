@@ -150,6 +150,6 @@
 @push('scripts')
     @php($motor = ['demo' => (bool) config('site.demo'), 'insurers' => $insurers, 'contactUrl' => route('contact')])
     <script>window.MOTOR = @json($motor);</script>
-    <script src="{{ asset('assets/js/din-codes.js') }}"></script>
-    <script src="{{ asset('assets/js/pages/motor-quote.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/din-codes.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/pages/motor-quote.js') }}"></script>
 @endpush

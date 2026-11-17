@@ -238,7 +238,9 @@ button { font-family: inherit; }
 .float-card .fc-track { will-change: transform; }
 .float-card .fc-track.is-moving { transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1); }
 @media (prefers-reduced-motion: reduce) { .float-card .fc-track, .float-card .fc-track.is-moving { transition: none; transform: none !important; } }
-.float-card .fc-ticker .row-mini { height: var(--rh); box-sizing: border-box; border-top: 1px solid var(--line); }
+.float-card.a .row-mini { height: 47px; box-sizing: border-box; white-space: nowrap; }
+.float-card.a .row-mini span.p { white-space: nowrap; flex-shrink: 0; }
+.float-card .fc-ticker .row-mini { height: var(--rh); border-top: 1px solid var(--line); }
 .float-card .fc-ticker.no-live .row-mini:first-child { border-top: 0; }
 .float-card .row-mini .nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .float-card .row-mini.is-soon .ins-logo { filter: grayscale(1); opacity: 0.55; }

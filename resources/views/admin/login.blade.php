@@ -7,8 +7,8 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Staff sign in — Delta Insurance</title>
     <link rel="icon" href="{{ asset('images/brand/delta-mark.png') }}" type="image/png" />
-    <link rel="stylesheet" href="{{ asset('assets/css/fontawesome.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/delta-app.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/fontawesome.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/delta-app.css') }}" />
   </head>
   <body class="d-app" style="min-height:100vh;display:grid;place-items:center;padding:24px 16px">
     <div style="width:min(420px,100%)">

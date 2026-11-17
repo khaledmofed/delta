@@ -42,7 +42,7 @@
 @endforeach
 @if ($slots > 0)
                 {{-- Vertical ticker: shows $slots rows at a time; JS moves it up one row every 2.5 s (assets/js/delta.js). --}}
-                <div class="fc-ticker {{ $live->isEmpty() ? 'no-live' : '' }}" data-fc-ticker style="--rows: {{ $slots }}" aria-label="Insurers coming soon">
+                <div class="fc-ticker {{ $live->isEmpty() ? 'no-live' : '' }}" data-fc-ticker style="--rows: {{ $slots }}; height: {{ $slots * 47 }}px; overflow: hidden" aria-label="Insurers coming soon">
                   <div class="fc-track">
 @foreach ($soon as $i)
                     {!! $soonRow($i) !!}

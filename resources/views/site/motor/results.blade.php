@@ -47,5 +47,5 @@
 @push('scripts')
     @php($motor = ['state' => $state, 'csrf' => csrf_token(), 'contactUrl' => route('contact'), 'quoteUrl' => route('motor.quote'), 'toast' => session('toast')])
     <script>window.MOTOR = @json($motor);</script>
-    <script src="{{ asset('assets/js/pages/quote-results.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/pages/quote-results.js') }}"></script>
 @endpush

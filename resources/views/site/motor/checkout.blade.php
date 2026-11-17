@@ -52,5 +52,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/pages/checkout.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/pages/checkout.js') }}"></script>
 @endpush

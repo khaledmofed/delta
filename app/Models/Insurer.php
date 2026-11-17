@@ -70,7 +70,7 @@ class Insurer extends Model
         $words = preg_split('/\s+/', trim(preg_replace('/\b(Insurance|National|Takaful|Company)\b/i', '', $this->name))) ?: [];
         $words = array_values(array_filter($words));
         if (count($words) === 1) {
-            return mb_strtoupper(mb_substr($words[0], 0, 3));
+            return mb_strtoupper(mb_substr($words[0], 0, 2));
         }
 
         return mb_strtoupper(implode('', array_map(fn ($w) => mb_substr($w, 0, 1), array_slice($words, 0, 2))));

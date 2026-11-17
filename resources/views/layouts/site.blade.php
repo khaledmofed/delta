@@ -11,10 +11,10 @@
     <link rel="icon" href="{{ asset('images/brand/delta-mark.png') }}" type="image/png" />
     <link rel="preload" href="{{ asset('assets/fonts/jakarta-var.woff2') }}" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="{{ asset('assets/fonts/dm-sans-var.woff2') }}" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/fontawesome.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/site.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/journey.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/fontawesome.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/site.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/journey.css') }}" />
     @stack('styles')
   </head>
   <body class="@yield('body_class')">
@@ -32,9 +32,9 @@
 @if (session('notice'))
     <script>window.DELTA_NOTICE = @json(session('notice'));</script>
 @endif
-    <script src="{{ asset('assets/js/delta-data.js') }}"></script>
-    <script src="{{ asset('assets/js/delta-store.js') }}"></script>
-    <script src="{{ asset('assets/js/delta.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/delta-data.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/delta-store.js') }}"></script>
+    <script src="{{ \App\Support\Asset::v('assets/js/delta.js') }}"></script>
     @stack('scripts')
   </body>
 </html>

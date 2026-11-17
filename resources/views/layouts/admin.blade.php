@@ -22,8 +22,8 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>@yield('title', 'Admin Console') — Delta Insurance</title>
     <link rel="icon" href="{{ asset('images/brand/delta-mark.png') }}" type="image/png" />
-    <link rel="stylesheet" href="{{ asset('assets/css/fontawesome.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/css/delta-app.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/fontawesome.css') }}" />
+    <link rel="stylesheet" href="{{ \App\Support\Asset::v('assets/css/delta-app.css') }}" />
     <script>
       /* Insurer logo fallback (same as DELTA.util.logoFallback). Defined in <head> so it exists before an <img> can fail. */
       window.DELTA = { util: { logoFallback: function (img) {
