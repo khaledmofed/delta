@@ -208,9 +208,14 @@ class MotorOrders
     protected function applyInsurerStatus(Order $order): Order
     {
         try {
+            $input = $order->quoteRequest?->input ?? [];
             $status = $this->insurers->get($order->insurer)->policyStatus($order->request_id, [
-                'awnic_quote_no' => $order->insurer_quote_no,
+                'insurer_quote_no' => $order->insurer_quote_no,
+                'awnic_quote_no' => $order->insurer_quote_no,   // AWNIC adapter reads this key
                 'premium' => $order->premium,
+                // QIC finds the issued policy by chassis (or mobile).
+                'chassis' => isset($input['chassis']) ? strtoupper(trim((string) $input['chassis'])) : null,
+                'mobile' => isset($input['mobile']) ? \App\Insurers\Data\MotorQuoteInput::mobile((string) $input['mobile']) : null,
             ]);
         } catch (\Throwable $e) {
             Log::warning('Policy status check failed', ['order' => $order->reference, 'e' => $e->getMessage()]);

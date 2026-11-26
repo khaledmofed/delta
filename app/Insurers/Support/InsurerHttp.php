@@ -60,7 +60,7 @@ class InsurerHttp
                 'url' => rtrim($this->baseUrl, '/').'/'.ltrim($path, '/'),
                 'request' => Redactor::redact(['headers' => $headers, 'body' => $body]),
                 'http_status' => $response?->status(),
-                'insurer_status' => (string) ($json['statusId'] ?? $json['isSuccess'] ?? '') ?: null,
+                'insurer_status' => (string) ($json['statusId'] ?? $json['isSuccess'] ?? $json['respCode'] ?? '') ?: null,
                 'response' => Redactor::redact($json),
                 'duration_ms' => (int) round((microtime(true) - $start) * 1000),
                 'error' => $error ? mb_substr($error, 0, 250) : null,

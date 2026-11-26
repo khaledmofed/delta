@@ -108,9 +108,42 @@ Last updated: 10-Nov-2026.
   - Dates are `dd-MON-yyyy`, for example `12-OCT-1985`.
   - Vehicle-first flow. No documents are needed before pricing.
   - AWNIC has its **own codes**. The DIN → AWNIC mapping goes in `insurer_codes.meta.din`.
-- **Status:** code written but not yet tested. Waiting for IP whitelisting.
+- **Status:** code written but not yet tested. The UAT server IP (89.117.52.13) is whitelisted (26-Nov-2026), but every call returns HTTP 403 `Partner-Id is not available for this user label`: AWNIC must link our Api-Key to Partner-Id `DELTAINS` (asked). `AWNIC_ENABLED=false` until then.
 
-### 3.3 Other insurers (no API yet)
+### 3.3 QIC (Qatar Insurance – UAE) — Motor API by Anoud Technologies
+
+- **Docs** (received 24-Nov-2026, kept **outside the repo** in `insurer-docs/qic`: they contain UAT credentials and sample personal data): "Anoud APIs for Motor Insurance" PDF, "Bayanaty API Integration" V4 PDF, a Postman collection made for Delta, Bayanaty Postman collections and master-data spreadsheets (make/model, body type, cylinders, nationality, registration location).
+- **Base URL:** `https://uatapi.qicuae.com/api-gateway/qicservices-uae` (UAT gateway). The PDFs and part of the Postman collection use a dev host `https://www.devapi.anoudapps.com/qicservices/aggregator` — see questions.
+- **Auth:** HTTP Basic (username / password, `.env` `QIC_USERNAME` / `QIC_PASSWORD`). Company code on every call, as the `company` header **and** `?company=002` (002 = Dubai, `QIC_COMPANY`). IP whitelisting required (89.117.52.13 sent to QIC). `QIC_ENABLED=false` until QIC confirms.
+- **Flow** (quote → premium → payment → policy):
+  1. *(optional)* **Bayanaty** vehicle data: `bayanaty/vehicleDetails` by chassis (make/model/trim ids, GCC, mileage), or make → model → `trims` → `bodyType` → `engineCapacities`; `vehicleValuationV2` gives the market value; `getQicCodes` turns Bayanaty ids into QIC `makeCode` / `modelCode` / `admeId`.
+  2. **`motor/tariff`** (POST): creates a quotation, returns `quoteNo` and `schemes[]` (product + scheme code, name, `netPremium`, basic / inclusive / optional / excess / discount covers). Third party = `sumInsured` 0, no trim id. Comprehensive needs `admeId` (Autodata trim id) and `sumInsured`.
+  3. **`motor/netPremium`** (POST): final premium for the chosen scheme (+ optional covers): `netPremium`, `taxAmount`.
+  4. **`sendPayLink`** (POST): `quoteNo`, `userId`, customer `emailId`, `userType` → `payLink` (QIC's payment page).
+  5. **`getLeadPolList`**: active policies by chassis / mobile / Emirates ID / email / plate / policy no. → `policyNo` for our `quoteNo`.
+  6. **`getPolicyReport`** (GET): `docType` Schedule | Receipt | Wordings → PDF. `getQuoteSchedule` (GET, `docType=Quotation`) → quotation PDF.
+- **Rules:** dates `DD/MM/YYYY` (`policyFromDate` ISO with time). Emirates ID as `784-YYYY-NNNNNNN-C`. QIC has its **own codes** (nationality, registration location 001–007, vehicle type, cylinders, make/model, Autodata trim): DIN → QIC mapping in `insurer_codes` (`insurer = qic`, `meta.din`), vehicle codes in `MotorQuoteInput::$extra['qic']`. Nothing is guessed: a missing code returns a `MAPPING` error for QIC only.
+- **Code:** `app/Insurers/Qic/QicAdapter` (HTTP, Basic auth, company, PDF download, Bayanaty helpers) and `QicMapper` (pure mapping). Tests: `tests/Unit/QicMapperTest`, `tests/Feature/QicAdapterTest` (Http::fake, test data only). `insurers:ping qic` sends an empty tariff: a validation answer = reachable + credentials accepted, 401/403 = credentials rejected, no answer = IP not whitelisted.
+- **Status:** code written and unit-tested, not yet tested against QIC (IP whitelisting pending).
+
+#### QIC — open questions (ask QIC / Anoud before going live)
+
+1. **Hosts:** which host is UAT for each call? The motor tariff and Bayanaty use `uatapi.qicuae.com/api-gateway/qicservices-uae/…`; `netPremium`, `getQuoteSchedule`, `sendPayLink`, `getPolicyReport` are on `devapi.anoudapps.com/qicservices/aggregator/…` in the collection. Are the paths the same under the UAT gateway (e.g. `…/qicservices-uae/motor/netPremium`, `…/qicservices-uae/sendPayLink`)? And the production base URL?
+2. **Credentials:** the Postman collection contains a username/password pair — are these our UAT credentials, or will separate ones be sent ("shared in a separate email")?
+3. **Success codes:** the list of `respCode` values (success vs. each error). Today we treat "no `errMessage` + expected field present" as success.
+4. **VAT:** is the scheme `netPremium` in `motor/tariff` VAT-inclusive (as `taxAmount` "Tax included in the Net Premium" suggests for `motor/netPremium`)?
+5. **netPremium body:** the spec lists `quoteNo`, `prodCode`, `schemeCode`, `optionalCovers[{coverCode}]`; the Delta collection sends `quoteNo` + `schemes[{schemeCode, productCode}]`. Which is right, and where do optional covers go?
+6. **Scheme types:** how do we tell Third Party vs Comprehensive and Agency vs Non-agency (product/scheme codes list)? Today we read the scheme name.
+7. **sendPayLink:** which `userId` and `userType` should Delta use (sample: an Anoud user, type `A`)? Does it also email the link to the customer? Can we pass **return URLs** (success / fail) so the customer comes back to Delta after paying? How long is the link valid?
+8. **Payment / policy status:** is there an API to check payment status by `quoteNo` (paid / failed / pending)? Is the policy issued automatically after payment, and how fast? Is `getLeadPolList` the right way to find the `policyNo` — GET or POST, exact path, and response field names (list key)?
+9. **Documents:** `getPolicyReport` / `getQuoteSchedule` return raw PDF or JSON with base64? Which `docType` values (spec says max length 2, the samples use `Schedule`, `Receipt`, `Wordings`, `Quotation`)?
+10. **Required fields:** the spec table is unclear: confirm mandatory fields for comprehensive and for TPL (`regYear` vs `firstRegDate`, `chassisNo`, `insuredAge`, `admeId`, `noClaimYear` 0–6, `driverExp`, `city`, `occupation`, `colorCode`). Max length of `emailId` is 25 — real emails are longer; can it be raised?
+11. **Codes:** the master lists we need as API or files: nationality, registration location (001–007 = which emirates?), vehicle type, usage, cylinders, colour, occupation, city, finance banks. Is `getQicCodes` the official way to get `makeCode` / `modelCode` / `admeId` from Bayanaty?
+12. **Documents from the customer:** does QIC need the Emirates ID / licence / Mulkiya files? Is there an upload API?
+13. **Old vehicles / eligibility:** QIC rules for vehicle age, value limits, Non-GCC, previous claims, that we should check before pricing.
+14. **Production:** commission setup, the Delta broker/agent code (if any), and the go-live steps.
+
+### 3.4 Other insurers (no API yet)
 
 - Fidelity United, Methaq, Sukoon and RAK Insurance were all contacted and are waiting or pending.
 - GIG Gulf and Al Buhaira are planned.

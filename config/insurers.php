@@ -44,6 +44,24 @@ return [
             'quote_process_by' => 'Delta Insurance Services',
         ],
 
+        // QIC (Qatar Insurance – UAE) — Motor API by Anoud Technologies. HTTP Basic auth, company 002 = Dubai.
+        'qic' => [
+            'name' => 'QIC Insurance',
+            'short' => 'QIC',
+            'adapter' => App\Insurers\Qic\QicAdapter::class,
+            'enabled' => env('QIC_ENABLED', false),
+            'products' => ['motor'],
+            'base_url' => env('QIC_BASE_URL', 'https://uatapi.qicuae.com/api-gateway/qicservices-uae'),
+            'username' => env('QIC_USERNAME'),
+            'password' => env('QIC_PASSWORD'),
+            'company' => env('QIC_COMPANY', '002'),
+            'timeout' => (int) env('QIC_TIMEOUT', 30),
+            'claims_phone' => env('QIC_CLAIMS_PHONE'),
+            // sendPayLink: QIC user id + user type for the payment link (TO CONFIRM with QIC — see CONTEXT.md).
+            'pay_user_id' => env('QIC_PAY_USER_ID'),
+            'user_type' => env('QIC_USER_TYPE', 'A'),
+        ],
+
     ],
 
     'payment' => [
