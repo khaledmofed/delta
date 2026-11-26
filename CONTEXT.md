@@ -93,8 +93,8 @@ Last updated: 10-Nov-2026.
 
 ### 3.2 Al Wathba (AWNIC) — Insure API, Motor Aggregators
 
-- **UAT base URL:** `https://insurance-uat.awnic.com/InsureApiBYUAT/API`
-- **API docs:** https://insurance-uat.awnic.com/InsureApiUAT/docs/repoMotor.html
+- **UAT base URL:** `https://insurance-uat.awnic.com/InsureApiBYUAT/API` (confirmed by AWNIC on 26-Nov-2026; used in the server `.env`, `.env.example` and the `config/insurers.php` default).
+- **API docs:** https://insurance-uat.awnic.com/InsureApiUAT/docs/repoMotor.html (documentation page only — never use `InsureApiUAT` as the API base).
 - **Headers on every call:** `Partner-Id`, `Api-Key`. The Customer-Code is also needed. All three values are in the email from AWNIC’s integration contact dated 6-Nov-2026; put them in `.env` as `AWNIC_*`.
 - **IP whitelisting is required.** Nothing works until AWNIC whitelists our server IP. Khaled's PC has a dynamic IP (check the current one before asking AWNIC to whitelist it); the UAT server needs a static IP.
 - **Flow** (from the Postman collection, which is not in the repo):
@@ -108,7 +108,7 @@ Last updated: 10-Nov-2026.
   - Dates are `dd-MON-yyyy`, for example `12-OCT-1985`.
   - Vehicle-first flow. No documents are needed before pricing.
   - AWNIC has its **own codes**. The DIN → AWNIC mapping goes in `insurer_codes.meta.din`.
-- **Status:** code written but not yet tested. The UAT server IP (89.117.52.13) is whitelisted (26-Nov-2026), but every call returns HTTP 403 `Partner-Id is not available for this user label`: AWNIC must link our Api-Key to Partner-Id `DELTAINS` (asked). `AWNIC_ENABLED=false` until then.
+- **Status:** code written but not yet tested. The UAT server IP (89.117.52.13) is whitelisted (26-Nov-2026), but every call returns HTTP 403 `Partner-Id is not available for this user label`: AWNIC must link our Api-Key to Partner-Id `DELTAINS` (asked; AWNIC are checking it as of 26-Nov-2026). `AWNIC_ENABLED=false` until they confirm.
 
 ### 3.3 QIC (Qatar Insurance – UAE) — Motor API by Anoud Technologies
 
